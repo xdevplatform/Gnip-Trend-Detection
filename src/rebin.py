@@ -6,15 +6,18 @@ The script reads in data in the format:
 Data are read from a file. 
 
 Inputs are:
+    input file name(s)
     rule name
     start time
     stop time
-    bin size
+    bin size and unit
+    output file name
+    verbosity
 
 Output is a .pkl of the list of (TimeBucket,count) pairs.
 
 Rebinning logic looks like:
-    assign intervals to a bin
+    assign input intervals to an output bin
     when the interval is split over two bins:
         assume constant rate over the interval and split count b/n bins
 
@@ -121,6 +124,7 @@ for orig_tb,orig_count in data_sorted:
         else:
             pass
 
+# put data back into a sorted list of tuples
 final_sorted_data_tuples = []
 for idx,count in sorted(final_data.items(), key=lambda x: grid[int(operator.itemgetter(0)(x))]):
     dt = grid[idx]
@@ -128,6 +132,7 @@ for idx,count in sorted(final_data.items(), key=lambda x: grid[int(operator.item
     if args.verbose:
         sys.stdout.write("{} {}\n".format(dt,count))
 
+# ...and dump it to a file
 pickle.dump(final_sorted_data_tuples,open(args.output_file_name,"w"))
 
 
