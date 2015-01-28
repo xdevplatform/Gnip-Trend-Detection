@@ -18,6 +18,7 @@ Then we run the analyze script, which reads from this file by default:
 
 This will print to stdout the following fields for each data point:
 
-TimeBucket info, count, Poisson mean, eta
+| TimeBucket info | count | Poisson mean | eta |
+| --------------  | ----- | ------------ | --- |
 
 See the scripts' `-h` menus for more options.
