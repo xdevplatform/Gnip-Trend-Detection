@@ -65,6 +65,12 @@ class Poisson():
         sensitivity = float(Delta_r)/self.mean
         return sensitivity
 
+    def get_mean(self):
+        if self.mean is None:
+            return 0
+        else:
+            return self.mean
+
     def get_eta(self): 
         s = self.get_sensitivity()
         r = self.get_relative_confidence_interval()
