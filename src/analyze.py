@@ -3,17 +3,24 @@
 import pickle
 import sys
 import argparse
+import logging
 
 import models
 import time_bucket
 
-def analyze(input_file_name, model):
-    for line in pickle.load(open(input_file_name)):
+logr = logging.getLogger("analyzer")
+logr.setLevel(logging.DEBUG)
+
+def analyze(generator, model):
+    plotable_data = []
+    for line in generator:
         tb = line[0]
         count = line[1]
         hour = int(tb.start_time.hour)
         model.update(count=count,hour=hour)
-        print("{0} {1:>8} {2:>8.2f} {3:.2f}".format(tb,str(count),model.get_mean(),model.get_eta()))
+        plotable_data.append( (tb,count,model.get_mean(),model.get_eta()) )
+        logr.debug("{0} {1:>8} {2:>8.2f} {3:.2f}".format(tb,str(count),model.get_mean(),model.get_eta())) 
+    return plotable_data
 
 if __name__ == "__main__":
     
@@ -24,6 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model = models.Poisson(alpha=args.alpha,mode=args.mode)
-    
-    analyze(args.input_file_name,model)
+   
+    generator = pickle.load(open(args.input_file_name))
+    analyze(generator,model)
 

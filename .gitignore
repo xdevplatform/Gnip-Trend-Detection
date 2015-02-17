@@ -1,2 +1,8 @@
 *.pkl
 *.pyc
+*.json
+*log
+*out
+*png
+*.txt
+*.csv

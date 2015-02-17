@@ -59,7 +59,7 @@ class Poisson():
         return relative_confidence_interval
 
     def get_sensitivity(self):
-        if self.mean is None or self.current_count is None:
+        if self.mean is None or self.current_count is None or self.mean == 0:
             return None
         Delta_r = abs(self.current_count - self.mean) 
         sensitivity = float(Delta_r)/self.mean

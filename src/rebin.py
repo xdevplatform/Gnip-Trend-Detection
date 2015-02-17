@@ -12,7 +12,6 @@ Inputs are:
     stop time
     bin size and unit
     output file name
-    verbosity
 
 Output is a .pkl of the list of (TimeBucket,count) pairs.
 
@@ -30,7 +29,6 @@ import collections
 import operator
 import pickle
 import logging
-import Queue
 
 import models
 from time_bucket import TimeBucket
@@ -41,8 +39,24 @@ EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
 def rebin(**kwargs):
-    logr = logging.getLogger(kwargs["logger_name"])
-    logr.info("rebin.py is processing rule: {}".format(kwargs["rule_name"]))
+    """
+    This function must be passed the following keyword arguments:
+        rule_name 
+        start_time
+        stop_time
+        input_file_names
+        binning_unit
+        n_binning_unit
+    Optional keyword arguments are:
+        return_queue
+        logger_name
+    """
+    if "logger_name" in kwargs:
+        logr = logging.getLogger(kwargs["logger_name"]) 
+    else:
+        logr = logging.getLogger("rebin")
+
+    logr.info(u"rebin.py is processing rule: {}".format(kwargs["rule_name"])) 
 
     start_time = datetime.datetime.strptime(kwargs["start_time"],COMPACT_DATETIME_FORMAT)
     stop_time = datetime.datetime.strptime(kwargs["stop_time"],COMPACT_DATETIME_FORMAT) 
@@ -87,7 +101,8 @@ def rebin(**kwargs):
         grid.append(tb)
         tb_start_time = tb.stop_time
         tb_stop_time = tb_start_time + datetime.timedelta(**{kwargs["binning_unit"]:kwargs["n_binning_unit"]})
-        tb = TimeBucket(tb_start_time,tb_stop_time)
+        tb = TimeBucket(tb_start_time,tb_stop_time) 
+    grid.append(tb)
 
     # add data to a dictionary with indicies mapped to the grid indicies
     final_data = collections.defaultdict(int)
@@ -117,27 +132,22 @@ def rebin(**kwargs):
     
     # put data back into a sorted list of tuples
     final_sorted_data_tuples = []
-    for idx,count in sorted(final_data.items(), key=lambda x: grid[int(operator.itemgetter(0)(x))]):
+    for idx,count in sorted(final_data.items(), key=operator.itemgetter(0)):  
         dt = grid[idx]
         final_sorted_data_tuples.append((dt,count))
-        if "verbose" in kwargs and kwargs["verbose"]:
-            sys.stdout.write("{} {}\n".format(dt,count))
+        logr.debug("{} {}\n".format(dt,count))
 
-    # this is a useful pseudo-return method for use with multiprocessing
+    # a mystery
+    final_sorted_data_tuples.pop(0)    
+
+    # for use with multiprocessing
     if "return_queue" in kwargs:
         logr.debug("adding {} key to dict with value {}".format(kwargs["rule_name"],final_sorted_data_tuples)) 
         kwargs["return_queue"].put_nowait((kwargs["rule_name"], final_sorted_data_tuples))
         logr.debug("added to return queue for {}".format(kwargs["rule_name"]))
-        return None
     else:
-    # and return the data structure
+    # return the data structure
         return final_sorted_data_tuples
-
-def tmp(**kwargs):
-    
-    logr = logging.getLogger(kwargs["logger_name"])
-    kwargs["return_queue"].put((kwargs["rule_name"],"tmp"))
-    logr.debug("added to return queue for {}".format(kwargs["rule_name"]))
 
 if __name__ == "__main__":
 
@@ -149,18 +159,17 @@ if __name__ == "__main__":
     parser.add_argument("-i",dest="input_file_names",default=None, nargs="*")   
     parser.add_argument("-f",dest="output_file_name",default="output.pkl")   
     parser.add_argument("-r",dest="rule_name",type=str,default=None)   
-    parser.add_argument("-t",dest="rule_tag",type=str,default=None)   
-    parser.add_argument("-v",dest="verbose",type=bool,default=False)   
+    #parser.add_argument("-t",dest="rule_tag",type=str,default=None)   
 
     args = parser.parse_args()
 
-    if args.rule_name is None and args.rule_tag is None:
-        sys.stderr.write("Rule name or tag must be set with -r or -t option! Exiting.\n")
-        sys.exit(1)
+    #if args.rule_name is None and args.rule_tag is None:
+    #    sys.stderr.write("Rule name or tag must be set with -r or -t option! Exiting.\n")
+    #    sys.exit(1)
 
-    if args.rule_name is not None and args.rule_tag is not None:
-        sys.stderr.write("Rule name or tag must not be both set! Exiting.\n")
-        sys.exit(1)
+    #if args.rule_name is not None and args.rule_tag is not None:
+    #    sys.stderr.write("Rule name or tag must not be both set! Exiting.\n")
+    #    sys.exit(1)
 
     if args.input_file_names is None:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
