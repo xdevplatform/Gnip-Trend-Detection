@@ -11,7 +11,7 @@ def plot(plotable_data,title=None):
     """
     tbs = [tup[0].start_time for tup in plotable_data]
     cts = [tup[1] for tup in plotable_data]
-    eta = [tup[3] for tup in plotable_data]
+    eta = [tup[2] for tup in plotable_data]
     max_cts = max(cts)
     min_cts = min(cts)
 
@@ -53,12 +53,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-a",dest="alpha",type=float,default=0.95)
     parser.add_argument("-m",dest="mode",default="lc")
-    parser.add_argument("-p",dest="period_list",default="hour",nargs="+")
+    parser.add_argument("-p",dest="period_list",default=["hour"],nargs="+")
     parser.add_argument("-i",dest="input_file_name",default="output.pkl")
     parser.add_argument("-t",dest="plot_title",default=None)
     args = parser.parse_args()
     
-    model = models.Poisson(alpha=args.alpha,mode=args.mode)
+    model = models.Poisson(args.mode,config={"alpha":args.alpha})
    
     generator = pickle.load(open(args.input_file_name))
     plotable_data = analyzer(generator,model,args.period_list)  

@@ -124,7 +124,7 @@ if args.do_rebin:
 if args.do_analysis:
     import models
 
-    model = models.Poisson(alpha=0.95,mode="a")
+    model = models.Poisson(mode="lc",config={"alpha":0.99})
     period_list = ["hour"]
 
     data_list = [] 
@@ -143,7 +143,7 @@ if args.do_analysis:
     
     def max_eta_getter(tup): 
         plotable_data = tup[1] 
-        return max(plotable_data, key=operator.itemgetter(3))
+        return max(plotable_data, key=operator.itemgetter(2))
 
     sorted_data_list = sorted(data_list, key = max_eta_getter)  
     for rule_name, plotable_data in sorted_data_list[0:3]: 

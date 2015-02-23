@@ -30,20 +30,29 @@ Now, imagine you want to analyze data from hourly time buckets.
 The first step is to run the rebin script for the desired time range, time bucket size, and rule.
 We choose the full data, with 60 minute time buckets. 
 
-`./src/rebin.py -a 20150126000000 -o 20150127000000 -r "my_favorite_rule" -b minute -n 60`
+`python src/rebin.py -a 20150126000000 -o 20150127000000 -r "my_favorite_rule" -b minutes -n 60 -i /mnt/data/2015/01/26/*/*counts`
 
-This will produce a file, `output.pkl`, 
+This will produce a file, `output.pkl` by default, 
 which contains a (serialized) list of (TimeBucket, count) tuples.  
 
 Then we run the analyze script, which reads from this file by default.
 We use the default point-by-point Poisson model, with 95% confidence intervals:
 
-`./src/analyze.py -m lc -a 0.95`
+`python src/analyze.py -m lc -a 0.95`
 
 This will return list of tuples with the following fields:
 
-| TimeBucket info | count | Poisson mean | eta |
-| --------------  | ----- | ------------ | --- |
+| TimeBucket info | count | eta |
+| --------------  | ----- | --- |
 
+For all techniques implemented in `models.py`, we use "eta" to refer
+to the relevant figure-of-merit.
+
+If we wish to analyze, model, and plot in one shot, we can go straight to 
+the plotting script, and use the same options:
+
+`python src/plot.py -m lc -a 0.95`
+
+This will run the analyze script as above and plot the data overlaid with eta values.
 
 See the scripts' `-h` menus for more options.

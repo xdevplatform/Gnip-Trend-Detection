@@ -94,7 +94,7 @@ class WeightedDataTemplates(object):
                 return 0
 
         min_distance = sys.float_info.max
-        for sub_topic in topic.get_subtopics(self.series_length)):
+        for sub_topic in topic.get_subtopics(self.series_length):
             d = getattr(self.distance_measures,self.distance_measure_name)(sub_topic,series)  
             if d < min_distance:
                 min_distance = d
@@ -124,6 +124,7 @@ class Poisson(object):
         
         self.mode = mode
         self.mean = None
+        self.current_count = None
         
         if self.mode == "lc":
             self.alpha = float(config["alpha"])

@@ -55,7 +55,15 @@ def rebin(**kwargs):
     if "logger_name" in kwargs:
         logr = logging.getLogger(kwargs["logger_name"]) 
     else:
+        lvl = logging.INFO
         logr = logging.getLogger("rebin")
+        
+        fmtr = logging.Formatter('%(asctime)s %(name)s - %(levelname)s - %(message)s') 
+        hndlr = logging.StreamHandler()
+        hndlr.setFormatter(fmtr)
+        hndlr.setLevel(lvl)
+        logr.addHandler(hndlr) 
+        logr.setLevel(lvl)
 
     if "rule_counter" not in kwargs:
         kwargs["rule_counter"] = "x"
@@ -158,7 +166,7 @@ def rebin(**kwargs):
             return final_sorted_data_tuples
 
     except Exception, e:
-        logr.FATAL(e)
+        logr.error(e)
 
 if __name__ == "__main__":
 
@@ -173,14 +181,6 @@ if __name__ == "__main__":
     #parser.add_argument("-t",dest="rule_tag",type=str,default=None)   
 
     args = parser.parse_args()
-
-    #if args.rule_name is None and args.rule_tag is None:
-    #    sys.stderr.write("Rule name or tag must be set with -r or -t option! Exiting.\n")
-    #    sys.exit(1)
-
-    #if args.rule_name is not None and args.rule_tag is not None:
-    #    sys.stderr.write("Rule name or tag must not be both set! Exiting.\n")
-    #    sys.exit(1)
 
     if args.input_file_names is None:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
