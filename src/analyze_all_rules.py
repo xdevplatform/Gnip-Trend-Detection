@@ -21,6 +21,7 @@ import pickle
 import logging
 import sys 
 import copy
+import operator
 from multiprocessing import Process,Queue,Pool
 
 from rebin import rebin
@@ -31,7 +32,7 @@ from plot import plot as plotter
 
 ###
 lvl = logging.INFO
-n_cpu = 8
+n_cpu = 10
 queue_size = 20000
 ###
 
@@ -63,6 +64,7 @@ if args.do_plot and not args.do_analysis:
     sys.exit()
 
 
+
 if args.do_rebin:
     queue = Queue(queue_size)
 
@@ -72,10 +74,14 @@ if args.do_rebin:
     kwargs["return_queue"] = queue
 
     rule_list = []
+    counter = 0
     for rule in json.load(open(args.rules_file_name))["rules"]:
         d = copy.copy(kwargs)
         d["rule_name"] = rule["value"]
-        rule_list.append(d) 
+        d["rule_counter"] = counter
+        rule_list.append(d)  
+
+        counter += 1
 
     def chunks(l, n):
         """ Yield successive n-sized chunks from l.
@@ -118,15 +124,28 @@ if args.do_rebin:
 if args.do_analysis:
     import models
 
-    model = models.Poisson(alpha=0.95,mode="lc")
+    model = models.Poisson(alpha=0.95,mode="a")
+    period_list = ["hour"]
 
+    data_list = [] 
     data = pickle.load(open(args.output_file_name))
     for rule, rule_data in data.items():
         logr.info(u"analyzing rule: {}".format(rule))
-        plotable_data = analyzer(rule_data,model) 
+        plotable_data = analyzer(rule_data,model,period_list) 
+        
+        rule_name = rule.replace(" ","-")[0:100]
 
         if args.do_plot:
-            rule_name = rule.replace(" ","-")[0:100]
             plotter(plotable_data,rule_name)
 
+        # save data
+        data_list.append((rule_name,plotable_data))
+    
+    def max_eta_getter(tup): 
+        plotable_data = tup[1] 
+        return max(plotable_data, key=operator.itemgetter(3))
+
+    sorted_data_list = sorted(data_list, key = max_eta_getter)  
+    for rule_name, plotable_data in sorted_data_list[0:3]: 
+        logr.info("{}: {}".format(rule_name,max_eta_getter((rule_name,plotable_data))))
 

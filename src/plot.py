@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-a",dest="alpha",type=float,default=0.95)
     parser.add_argument("-m",dest="mode",default="lc")
+    parser.add_argument("-p",dest="period_list",default="hour",nargs="+")
     parser.add_argument("-i",dest="input_file_name",default="output.pkl")
     parser.add_argument("-t",dest="plot_title",default=None)
     args = parser.parse_args()
@@ -60,5 +61,5 @@ if __name__ == "__main__":
     model = models.Poisson(alpha=args.alpha,mode=args.mode)
    
     generator = pickle.load(open(args.input_file_name))
-    plotable_data = analyzer(generator,model)  
+    plotable_data = analyzer(generator,model,args.period_list)  
     plot(plotable_data,title=args.plot_title)
