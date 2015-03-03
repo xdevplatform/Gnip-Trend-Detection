@@ -1,0 +1,37 @@
+[rebin]
+start_time=20150126000000
+stop_time=20150205000000
+rule_name=broncos
+rules_file_rules.json
+binning_unit=hours
+n_binning_unit=1
+
+[analyze]
+model_name=Poisson
+#model_name=WeightedDataTemplates
+
+[plot]
+#plot_title=broncos
+
+
+### model configurations
+
+[Poisson_model]
+# "last count" mode
+mode=lc  
+# "averaged mode": Poisson mean taken from average over similiar periods
+#mode=a  
+alpha=0.99
+# list of attributes of TimeBucket.start_time to use for period identification
+period_list=hour
+
+[WeightedDataTemplates_model] 
+# length of subset of test series to compare to reference series
+series_length=40                  
+# distance parameter for weights
+lambda=1                          
+# pickle file containing the Library instance to be used
+library_file_name=my_library.pkl  
+# only 'euclidean' is implemented
+distance_measure_name=euclidean   
+

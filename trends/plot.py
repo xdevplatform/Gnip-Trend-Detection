@@ -12,9 +12,11 @@ def plot(plotable_data,title=None):
     tbs = [tup[0].start_time for tup in plotable_data]
     cts = [tup[1] for tup in plotable_data]
     eta = [tup[2] for tup in plotable_data]
+    if cts == []:
+        return -1
     max_cts = max(cts)
     min_cts = min(cts)
-
+    
     fig = plt.figure()
     if title is not None:
         plt.title(title)
@@ -31,35 +33,55 @@ def plot(plotable_data,title=None):
 
     ax2 = ax1.twinx()
     ax2.plot(tbs,eta,'r')
-    ax2.set_ylim(min(eta)*0.9, max(eta)*1.1)
+    min_eta = 0
+    if min(eta) > 0:
+        min_eta = min(eta) * 0.9
+    ax2.set_ylim(min_eta, max(eta)*1.1)
     ax2.set_ylabel("eta",color='r',fontsize=10)
     for tl in ax2.get_yticklabels():
         tl.set_color('r')
         tl.set_fontsize(10)
     fig.autofmt_xdate()
-    #ax1.set_xlabel("time")
   
     if title is None:
         title = "output"
     plt.savefig("/home/jkolb/public_html/rules/{}.png".format(title),dpi=400) 
 
+    return 0
+
 if __name__ == "__main__":
 
     import argparse
-    import models
+    import ConfigParser
     import pickle
+    
+    import models
     from analyze import analyze as analyzer
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a",dest="alpha",type=float,default=0.95)
-    parser.add_argument("-m",dest="mode",default="lc")
-    parser.add_argument("-p",dest="period_list",default=["hour"],nargs="+")
-    parser.add_argument("-i",dest="input_file_name",default="output.pkl")
+    parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
+    parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
     parser.add_argument("-t",dest="plot_title",default=None)
     args = parser.parse_args()
-    
-    model = models.Poisson(args.mode,config={"alpha":args.alpha})
+
+    if args.config_file_name is not None:
+        config = ConfigParser.SafeConfigParser()
+        config.read(args.config_file_name)
+        model_name = config.get("model","model_name")
+        model_config = dict(config.items(model_name + "_model")) 
+        if config.has_option("plot","plot_title"):
+            plot_title = config.get("plot","plot_title") 
+        else:
+            plot_title = None
+    else:
+        model_config = {"alpha":0.99,"mode":"lc"}
+        model_name = "Poisson"
+        plot_title = None
    
+    if args.plot_title is not None:
+        plot_title = args.plot_title
+    
+    model = getattr(models,model_name)(config=model_config) 
     generator = pickle.load(open(args.input_file_name))
-    plotable_data = analyzer(generator,model,args.period_list)  
-    plot(plotable_data,title=args.plot_title)
+    plotable_data = analyzer(generator,model)  
+    plot(plotable_data,title=plot_title)

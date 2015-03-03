@@ -29,14 +29,16 @@ import collections
 import operator
 import pickle
 import logging
+import fnmatch
+import os
 
 import models
-from time_bucket import TimeBucket
+from trends.time_bucket import TimeBucket
 
 # timestamps read from files are expected in this format
 EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 #EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
-# input start/stop time are expected in this format
+# keyword arguments start/stop time are expected in this format
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
 def rebin(**kwargs):
@@ -58,7 +60,7 @@ def rebin(**kwargs):
         lvl = logging.INFO
         logr = logging.getLogger("rebin")
         
-        fmtr = logging.Formatter('%(asctime)s %(name)s - %(levelname)s - %(message)s') 
+        fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
         hndlr = logging.StreamHandler()
         hndlr.setFormatter(fmtr)
         hndlr.setLevel(lvl)
@@ -66,7 +68,7 @@ def rebin(**kwargs):
         logr.setLevel(lvl)
 
     if "rule_counter" not in kwargs:
-        kwargs["rule_counter"] = "x"
+        kwargs["rule_counter"] = 1
 
     try:
         logr.info(u"rebin.py is processing rule {}: {}".format(kwargs["rule_counter"],kwargs["rule_name"])) 
@@ -81,7 +83,7 @@ def rebin(**kwargs):
             f = open(input_file_name)
             for line in f:
                 line_split = line.split(",")
-                if line_split[1].strip() != kwargs["rule_name"].strip():
+                if line_split[1].strip().rstrip() != kwargs["rule_name"].strip().rstrip(): 
                     continue
                 else:
                     this_stop_time = datetime.datetime.strptime(line_split[0],EXPLICIT_DATETIME_FORMAT)  
@@ -94,7 +96,7 @@ def rebin(**kwargs):
                     time_bucket = TimeBucket(this_start_time, this_stop_time, EXPLICIT_DATETIME_FORMAT) 
                     
                     # sanity check: input time buckets must always be smaller than output time bucket
-                    if time_bucket.size() > datetime.timedelta(**{kwargs["binning_unit"]:kwargs["n_binning_unit"]}):
+                    if time_bucket.size() > datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])}):
                         sys.stderr.write("Input time bucket {} is larger that {}{}\n".format(time_bucket,str(kwargs["n_binning_unit)"]),kwargs["binning_unit"]))
                         sys.exit(-1)
                     count = line_split[2]
@@ -102,10 +104,11 @@ def rebin(**kwargs):
                     data.append(my_tuple)
 
         logr.debug("Completed reading from files for {}".format(kwargs["rule_name"]))
+        #logr.debug("Data is {}".format(data))
         data_sorted = sorted(data)
 
         # make a grid with appropriate bin size
-        tb_stop_time = start_time + datetime.timedelta(**{kwargs["binning_unit"]:kwargs["n_binning_unit"]})
+        tb_stop_time = start_time + datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])})
         tb = TimeBucket(start_time,tb_stop_time)
 
         # make list of TimeBuckets for bins
@@ -113,7 +116,7 @@ def rebin(**kwargs):
         while tb.stop_time <= stop_time:
             grid.append(tb)
             tb_start_time = tb.stop_time
-            tb_stop_time = tb_start_time + datetime.timedelta(**{kwargs["binning_unit"]:kwargs["n_binning_unit"]})
+            tb_stop_time = tb_start_time + datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])})
             tb = TimeBucket(tb_start_time,tb_stop_time) 
         grid.append(tb)
 
@@ -171,20 +174,36 @@ def rebin(**kwargs):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a",dest="start_time",default="20141210000000",help="YYYYMMDDhhmmss") 
-    parser.add_argument("-o",dest="stop_time",default="20141211000000",help="YYYYMMDDhhmmss") 
-    parser.add_argument('-b',dest='binning_unit',action='store',default='seconds') 
-    parser.add_argument('-n',dest='n_binning_unit',action='store',default=60,type=int,help='number of binning units per bin') 
-    parser.add_argument("-i",dest="input_file_names",default=None, nargs="*")   
-    parser.add_argument("-f",dest="output_file_name",default="output.pkl")   
-    parser.add_argument("-r",dest="rule_name",type=str,default=None)   
-    #parser.add_argument("-t",dest="rule_tag",type=str,default=None)   
-
+    parser.add_argument("-c",dest="config_file_name",default=None)   
+    parser.add_argument("-i",dest="input_file_names",default=None)   
+    parser.add_argument("-d",dest="input_file_base_dir",default=None)   
+    parser.add_argument("-p",dest="input_file_postfix",default="counts")    
+    parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
     args = parser.parse_args()
+
+    # parse config file
+    if args.config_file_name is not None and not os.path.exists(args.config_file_name) and not os.path.exists("config.cfg"): 
+        logr.error("cmd-line argument 'config_file_name' must be a valid config file, or config.cfg must exist")
+        sys.exit(1)
+    else:
+        if args.config_file_name is None and os.path.exists("config.cfg"):
+            args.config_file_name = "config.cfg"
+
+        import ConfigParser as cp 
+        config = cp.ConfigParser()
+        config.read(args.config_file_name)
+        rebin_config = config.items("rebin") 
+        kwargs = dict(rebin_config)
+
+    if args.input_file_base_dir is not None:
+        args.input_file_names = []
+        for root, dirnames, filenames in os.walk(args.input_file_base_dir):
+            for fname in fnmatch.filter(filenames,"*"+args.input_file_postfix):
+                args.input_file_names.append(os.path.join(root,fname))
 
     if args.input_file_names is None:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
-
-    final_sorted_data_tuples = rebin(**vars(args))
+   
+    final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,**kwargs)
     pickle.dump(final_sorted_data_tuples,open(args.output_file_name,"w"))

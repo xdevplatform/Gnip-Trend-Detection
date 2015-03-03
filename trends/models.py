@@ -1,5 +1,9 @@
-import scipy.stats.distributions as dists
 import collections
+import sys
+import pickle
+import math
+
+import scipy.stats.distributions as dists
 
 """
 Classes in the module implement trend detection techniques.
@@ -19,27 +23,32 @@ class WeightedDataTemplates(object):
         This auxiliary module "library" (or equivalent code) is required.
         """
         
+        # set up basic member variables
         self.current_count = None
         self.ratio = float(-1)
+        self.total_series = []
 
-        self.set_up_distance_measures()
+        # manage everything related to distance measurements
+        self.set_up_distance_measures(config)
 
+        # config handling
         if "series_length" in config:
-            self.series_length = config["series_length"] 
+            self.series_length = int(config["series_length"])  
         else:
-            self.series_length = 12
+            self.series_length = 50
 
         if "lambda" in config:
-            self.lambda_1 = config["lambda"] 
+            self.Lambda = float(config["lambda"])
         else:
-            self.lambda_1 = 1
+            self.Lambda = 1
 
-        self.current_series = []
+        from library import Library
+        if "library_file_name" in config:
+            self.library = pickle.load(open(config["library_file_name"]))
+        else:
+            self.library = Library()
 
-        from sample_library import Library
-        self.library = Library()
-
-    def update(self, kwargs):
+    def update(self, **kwargs):
         """
         Calculate trend ratio of weights for time series based on latest data. 
         """
@@ -50,17 +59,26 @@ class WeightedDataTemplates(object):
         check_for_self = False
         if "check_for_self" in kwargs:
             check_for_self = kwargs["check_for_self"]
-            
-        self.update_current_series(self.current_count)
-        self.series = self.get_current_series()
+           
+        # add current data to series and get appropriately-sized sub-series
+        self.total_series.append(current_count)
+        current_series =  self.total_series[-self.series_length:-1]
 
+        # don't return anything meaningful until total_series is long enough
+        if len(self.total_series) < self.series_length:
+            self.ratio = -1
+            return
+
+        # transform the test series just like the reference series
+        current_series = self.library.transform_input(current_series)
+        
         trend_weight = 0
-        for item in self.library.trends: 
-            trend_weight += self.weight(item,self.series,check_for_self)
+        for reference_series in self.library.trends:  
+            trend_weight += self.weight(reference_series,current_series,check_for_self)
         
         non_trend_weight = 0
-        for item in self.library.non_trends: 
-            non_trend_weight += self.weight(item,self.series,check_for_self)
+        for reference_series in self.library.non_trends: 
+            non_trend_weight += self.weight(reference_series,current_series,check_for_self)
 
         self.ratio = trend_weight / non_trend_weight
 
@@ -68,44 +86,41 @@ class WeightedDataTemplates(object):
         """
         Return result or figure-of-merit (ratio of weights, in this case) defined by the mode of operation
         """
+        if self.ratio is None:
+            return -1
+
         return self.ratio
 
-    def update_current_series(self,new_count):
+    def weight(self,reference_series,test_series,check_for_self):
         """
-        add new data to time series
-        """
-        self.series.append(new_count)
-
-    def get_current_series(self):
-        """
-        Get time series appropriate to latest data
-        """
-        return self.series[-self.series_length:-1]
-
-    def weight(self,topic,series,check_for_self):
-        """
-        Get the minimum distance between the series and all series-length subset of topic.
+        Get the minimum distance between the series and all test_series-length subset of reference_series.
         Exponentiate it and return the weight.
         """
 
-        # account for case when topic in library is used as the series 
+        # account for case when reference_series in library is used as the test_series 
         if check_for_self:
-            if topic == series:
+            if reference_series == test_series: 
+                print("found self in library!")
                 return 0
 
         min_distance = sys.float_info.max
-        for sub_topic in topic.get_subtopics(self.series_length):
-            d = getattr(self.distance_measures,self.distance_measure_name)(sub_topic,series)  
+        for sub_series in reference_series.get_subseries(self.series_length):
+            d = getattr(self.distance_measures,self.distance_measure_name)(sub_series,test_series)  
             if d < min_distance:
                 min_distance = d
 
-        return math.exp(-float(min_distance) * self.lambda_1 )
+        return math.exp(-float(min_distance) * self.Lambda )
 
-    def set_up_distance_measures(self):
+    def set_up_distance_measures(self, config): 
         """
         Define and instantiate helper class for distance measures.
         """
-        class DistanceMeasures(self):
+        if "distance_measure_name" in config:
+            self.distance_measure_name = config["distance_measure_name"]
+        else:
+            self.distance_measure_name = "euclidean"
+
+        class DistanceMeasures(object):
             def __init__(self):
                 pass
             def euclidean(self,a,b):
@@ -117,12 +132,12 @@ class WeightedDataTemplates(object):
 
 class Poisson(object):
     """
-    This class implements Poisson-based background models. 
+    This class implements Poisson background models. 
     It supports a small set of options for determining the Poisson mean.
     """
-    def __init__(self, mode = "lc", config = {"alpha":0.99}):
+    def __init__(self, config = {"alpha":0.99,"mode":"lc","period_list":["hour"]}):
         
-        self.mode = mode
+        self.mode = config["mode"]
         self.mean = None
         self.current_count = None
         
@@ -132,6 +147,7 @@ class Poisson(object):
         if self.mode == "a":
             self.periodic_data = collections.defaultdict(dict)
             self.alpha = float(config["alpha"])
+            self.period_list = config["period_list"].split(",")
 
     def update(self, **kwargs):
         """
@@ -142,6 +158,9 @@ class Poisson(object):
         #this must always exist
         current_count = kwargs["count"]
 
+        #this must always exist
+        tb = kwargs["time_bucket"]
+
         #manage last (previous) count
         self.last_count = self.current_count
         if "last_count" in kwargs:
@@ -151,9 +170,10 @@ class Poisson(object):
         
         if self.mode == "lc":
             self.mean = self.last_count
-
+        
         if self.mode == "a": 
-            period = kwargs["period"]
+            period = ":".join([str(getattr(tb.start_time,p)) for p in self.period_list])
+            
             if "num" in self.periodic_data[period]:
                 self.periodic_data[period]["num"] += current_count 
             else:
@@ -168,7 +188,6 @@ class Poisson(object):
 
     def get_relative_confidence_interval(self):
         """
-        For use with Poisson-based methods:
         Get relative (fractional) confidence interval size, 
         based on "self.mean" attribute.
         """
