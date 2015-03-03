@@ -2,7 +2,7 @@
 start_time=20150126000000
 stop_time=20150205000000
 rule_name=broncos
-rules_file_rules.json
+rules_filei_name=rules.json
 binning_unit=hours
 n_binning_unit=1
 
@@ -11,13 +11,13 @@ model_name=Poisson
 #model_name=WeightedDataTemplates
 
 [plot]
-#plot_title=broncos
+plot_title=broncos
 
 
 ### model configurations
 
 [Poisson_model]
-# "last count" mode
+# "last/previous count" mode
 mode=lc  
 # "averaged mode": Poisson mean taken from average over similiar periods
 #mode=a  

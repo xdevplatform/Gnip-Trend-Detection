@@ -18,7 +18,7 @@ Output is a .pkl of the list of (TimeBucket,count) pairs.
 Rebinning logic looks like:
     assign input intervals to an output bin
     when the interval is split over two bins:
-        assume constant rate over the interval and split count b/n bins
+        assume constant rate over the interval and split count between bins
 
 """
 
@@ -104,7 +104,6 @@ def rebin(**kwargs):
                     data.append(my_tuple)
 
         logr.debug("Completed reading from files for {}".format(kwargs["rule_name"]))
-        #logr.debug("Data is {}".format(data))
         data_sorted = sorted(data)
 
         # make a grid with appropriate bin size

@@ -72,8 +72,16 @@ class Library(object):
         Manage all attributes of class that are important for combinations. 
         Take care not to allow duplicates.
         """
-        self.trends = list(set(self.trends.extend(lib.trends)))
-        self.non_trends = list(set(self.non_trends.extend(lib.non_trends)))
+        if lib.trends != []:
+            if self.trends == []:
+                self.trends = lib.trends
+            else:
+                self.trends = list(set(self.trends.extend(lib.trends)))
+        if lib.non_trends != []: 
+            if self.non_trends == []:
+                self.non_trends = lib.non_trends
+            else:
+                self.non_trends = list(set(self.non_trends.extend(lib.non_trends)))
         #self.transformations = set(self.transformations.extend(lib.transformations))
 
 def unit_normalization(series, config):

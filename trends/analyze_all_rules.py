@@ -1,7 +1,7 @@
 """
 
 This script operates on a set of time series. 
-It is particularly suited for use with data collected from
+It is particularly well-suited for use with data collected from
 Gnip streams using the Gnip-Stream-Collector-Metric packages
 and its rule-counting module.
 
@@ -9,6 +9,10 @@ The script re-bins the data with 'rebin.py', using
 "n_cpu" multiprocessing.Process objects.
 The resulting data are then modeled with 'analyze.py'
 and plotted with 'plot.py'.
+
+Command-line argument control the input, output, and config file names,
+as well as the switches for doing re-bin, analysis, and plotting.
+The config file specifies the rule information and model configuration
 
 NOTE: by default, neither the rebin, nor the analyzing, nor the plotting are performed. 
 
@@ -52,7 +56,7 @@ parser.add_argument("-a",dest="do_analysis",action="store_true",default=False,he
 parser.add_argument("-p",dest="do_plot",action="store_true",default=False,help="do plotting")   
 args = parser.parse_args()
 
-# parse config file
+# parse config file, which contains model and rule info
 if args.config_file_name is not None and not os.path.exists(args.config_file_name) and not os.path.exists("config.cfg"): 
     logr.error("cmd-line argument 'config_file_name' must be a valid config file, or config.cfg must exist")
     sys.exit(1)
@@ -186,21 +190,58 @@ if args.do_analysis:
         if plotable_data != []:
             saved_data_list.append((rule_name,plotable_data))
   
-    def max_eta_getter(tup): 
+    def max_last_field_getter(tup): 
         """ a function that acts on tuples like: 
-        ( [rule], [ (time_1,count_1,eta_1),(time_2,count_2,eta_2)...] )
-        and returns the maximum eta value
+        ( [rule], [ (1_field_1, 1_field_2, 1_field_3 ... 1_field_n),(2_field_1,2_field_2,2_field_3...2_field_n)...] )
+        and returns the largest m_field_n value, where n is the (fixed) size of the tuple in the list, 
+        and m is the length of the list
         """
         plotable_data = tup[1] 
-        m = max(plotable_data, key=operator.itemgetter(2)) 
-        logr.debug("{} - max eta: {}".format(tup[0],m[2]))
-        return m[2]
+        m = max(plotable_data, key=operator.itemgetter(-1)) 
+        logr.debug("{} - max eta: {}".format(tup[0],m[-1]))
+        return m[-1]
+
+    def area_under_eta_curve(tup):
+        """ a function that acts on tuples like:
+        ( [rule], [ (tb_1,count_1,eta_1),(tb_2,count_2,eta_2)... ] )
+        and calculated the area under the eta curve for a window of size "half_window_size"
+        """
+        rule = tup[0]
+        data = tup[1]
+        
+        index = 0 
+        half_window_size = 3
+
+        auc_list = []
+        for tb,ct,eta in data:
+            if index < half_window_size:
+                auc_list.append((tb,ct,eta,0))
+                index += 1
+                continue
+            auc = 0
+            for tb,ct,eta in data[index-half_window_size:index+half_window_size+1]:
+                auc += eta
+            auc_list.append((tb,ct,eta,auc))
+            index += 1
+        return (rule,auc_list)        
 
     # sort the saved data list by maximum eta value
-    sorted_data_list = list(reversed(sorted(saved_data_list, key=max_eta_getter)))
+    sorted_data_list = list(reversed(sorted(saved_data_list, key=max_last_field_getter)))
     
     # print top 3 rules by max eta value
-    for rule_name, plotable_data in sorted_data_list[0:3]: 
-        max_pt = max(plotable_data,key=operator.itemgetter(2))
+    for rule_name, data in sorted_data_list[0:3]: 
+        max_pt = max(data,key=operator.itemgetter(2))
         print("Rule: {0} - maximum eta: {1:.1f} at count: {2} / timestamp: {3}".format(rule_name, max_pt[2], max_pt[1], max_pt[0]))
 
+    # append area-under-curve to data
+    auc_data_list = [ area_under_eta_curve(tup) for tup in saved_data_list]
+
+    # sort the saved data list by maximum area-under-eta-curve value
+    sorted_data_list = list(reversed(sorted(auc_data_list, key=max_last_field_getter)))
+    
+    # print top 3 rules by max area-under-eta-curve value
+    for rule_name, data in sorted_data_list[0:3]: 
+        max_pt = max(data,key=operator.itemgetter(3))
+        print("Rule: {0} - maximum area-under-eta-curve: {1:.1f} at count: {2} / timestamp: {3}".format(rule_name, max_pt[3], max_pt[1], max_pt[0]))
+
+    

@@ -50,13 +50,22 @@ def plot(plotable_data,title=None):
     return 0
 
 if __name__ == "__main__":
-
+    
     import argparse
     import ConfigParser
     import pickle
+    import logging
     
     import models
     from analyze import analyze as analyzer
+
+    logr = logging.getLogger("analyzer")
+    #logr.setLevel(logging.DEBUG)
+    if logr.handlers == []:
+        fmtr = logging.Formatter('%(asctime)s %(name)s - %(levelname)s - %(message)s') 
+        hndlr = logging.StreamHandler()
+        hndlr.setFormatter(fmtr)
+        logr.addHandler(hndlr) 
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     if args.config_file_name is not None:
         config = ConfigParser.SafeConfigParser()
         config.read(args.config_file_name)
-        model_name = config.get("model","model_name")
+        model_name = config.get("analyze","model_name")
         model_config = dict(config.items(model_name + "_model")) 
         if config.has_option("plot","plot_title"):
             plot_title = config.get("plot","plot_title") 
@@ -80,8 +89,8 @@ if __name__ == "__main__":
    
     if args.plot_title is not None:
         plot_title = args.plot_title
-    
+
     model = getattr(models,model_name)(config=model_config) 
     generator = pickle.load(open(args.input_file_name))
-    plotable_data = analyzer(generator,model)  
+    plotable_data = analyzer(generator,model,logr)  
     plot(plotable_data,title=plot_title)

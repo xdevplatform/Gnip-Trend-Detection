@@ -172,6 +172,8 @@ class Poisson(object):
             self.mean = self.last_count
         
         if self.mode == "a": 
+            # create a ':'-separated string of the tb.start_time attributes, as specified by self.period_list 
+            # this defines the key over which counts will be averaged
             period = ":".join([str(getattr(tb.start_time,p)) for p in self.period_list])
             
             if "num" in self.periodic_data[period]:
