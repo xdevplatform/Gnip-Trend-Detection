@@ -10,7 +10,8 @@ Classes in the module implement trend detection techniques.
 For uniform interface, all classes must implement the following functions:
     get_result(): returns the relevant figure of merit based on the current
         state of the model
-    update(kwargs): updates the model with new information
+    update(kwargs): updates the model with new information;
+        required keyword arguments may differ between models
 
 """
 
@@ -20,13 +21,16 @@ class WeightedDataTemplates(object):
         This class implements the data-template-based trend detection technique
         presented by Nikolov 
         (http://dspace.mit.edu/bitstream/handle/1721.1/85399/870304955.pdf)
-        This auxiliary module "library" (or equivalent code) is required.
+        The auxiliary module "library" (or equivalent code) is required.
         """
         
         # set up basic member variables
         self.current_count = None
-        self.ratio = float(-1)
         self.total_series = []
+        self.trend_weight = None
+        self.non_trend_weight = None
+
+        self.SMALL_NUMBER = 0.001
 
         # manage everything related to distance measurements
         self.set_up_distance_measures(config)
@@ -50,7 +54,7 @@ class WeightedDataTemplates(object):
 
     def update(self, **kwargs):
         """
-        Calculate trend ratio of weights for time series based on latest data. 
+        Calculate trend weights for time series based on latest data. 
         """
         
         # this must always exist
@@ -63,33 +67,40 @@ class WeightedDataTemplates(object):
         # add current data to series and get appropriately-sized sub-series
         self.total_series.append(current_count)
         current_series =  self.total_series[-self.series_length:-1]
-
+        #print(current_series)
         # don't return anything meaningful until total_series is long enough
         if len(self.total_series) < self.series_length:
-            self.ratio = -1
+            self.trend_weight = float(0)
+            self.non_trend_weight = float(0)
             return
 
         # transform the test series just like the reference series
-        current_series = self.library.transform_input(current_series)
-        
-        trend_weight = 0
+        current_series = self.library.transform_input(current_series,is_test_series=True)
+        #print(current_series) 
+        self.trend_weight = float(0)
         for reference_series in self.library.trends:  
-            trend_weight += self.weight(reference_series,current_series,check_for_self)
+            #print reference_series
+            weight = self.weight(reference_series,current_series,check_for_self) 
+            #print("trend wt: {}".format(weight))
+            self.trend_weight += weight
         
-        non_trend_weight = 0
+        self.non_trend_weight = float(0)
         for reference_series in self.library.non_trends: 
-            non_trend_weight += self.weight(reference_series,current_series,check_for_self)
-
-        self.ratio = trend_weight / non_trend_weight
+            #print reference_series
+            weight = self.weight(reference_series,current_series,check_for_self)
+            #print("non trend wt: {}".format(weight))
+            self.non_trend_weight += weight
 
     def get_result(self):
         """
         Return result or figure-of-merit (ratio of weights, in this case) defined by the mode of operation
         """
-        if self.ratio is None:
+        if self.trend_weight is None or self.non_trend_weight is None:
             return -1
+        if self.non_trend_weight == 0:
+            self.non_trend_weight = self.SMALL_NUMBER
 
-        return self.ratio
+        return self.trend_weight / self.non_trend_weight
 
     def weight(self,reference_series,test_series,check_for_self):
         """
@@ -106,9 +117,10 @@ class WeightedDataTemplates(object):
         min_distance = sys.float_info.max
         for sub_series in reference_series.get_subseries(self.series_length):
             d = getattr(self.distance_measures,self.distance_measure_name)(sub_series,test_series)  
+            #print("Distance: {}".format(d))
             if d < min_distance:
                 min_distance = d
-
+        #print("min d: {}".format(min_distance))
         return math.exp(-float(min_distance) * self.Lambda )
 
     def set_up_distance_measures(self, config): 
