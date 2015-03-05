@@ -23,7 +23,6 @@ class Library(object):
         """
         self.trends = []
         self.non_trends = []
-        self.transformations = []
 
         self.set_up_transformations(kwargs)
 
@@ -39,12 +38,17 @@ class Library(object):
         else:
             self.non_trends.append( TopicSeries(series) )
 
-    def transform_input(self,series):
+    def transform_input(self,series,is_test_series=False):
         """
         Run series sequentially through the functions 
         in the transformations list
         """
-        for transformation in self.transformations:
+        if is_test_series:
+            transformations = self.test_transformations
+        else:
+            transformations = self.transformations
+
+        for transformation in transformations:
             series = transformation(series,self.config)
 
         return series
@@ -54,14 +58,22 @@ class Library(object):
         Convenience method to be called in ctor.
         Transformation functions are defined globally and added here to list.
         """
+        # transformations to be run on reference series
+        self.transformations = []
         self.transformations.append(unit_normalization)
         self.transformations.append(spike_normalization)
         self.transformations.append(smoothing)
         self.transformations.append(logarithmic_scaling)
         self.transformations.append(sizing)
-
+        # transformations to be run on test series
+        self.test_transformations = []
+        self.test_transformations.append(unit_normalization)
+        self.test_transformations.append(spike_normalization)
+        self.test_transformations.append(smoothing)
+        self.test_transformations.append(logarithmic_scaling)
+        
         self.config = {}
-        self.config["reference_length"] = 60
+        self.config["reference_length"] = 100
         self.config["n_smooth"] = 4
         self.config["alpha"] = 1.2
 
@@ -119,11 +131,14 @@ def logarithmic_scaling(series, config):
     new_series = []
     series_min = min(series)
     for pt in series:
-        new_series.append(math.log10(pt + series_min + 1))
+        if pt <= 0:
+            pt = 0.00001
+        new_series.append(math.log10(pt)) 
+        #new_series.append(math.log10(pt + series_min + 1))
     return new_series
 
 def sizing(series, config):
-    size_r = config["reference_length"]
+    size_r = int(config["reference_length"])
     
     if bool(config["is_trend"]):
         max_idx = None
@@ -134,8 +149,6 @@ def sizing(series, config):
                 max_idx = idx
                 max_pt = pt
             idx += 1
-        #print("returning {} - {}".format(series[max_idx - size_r],series[max_idx]))
-        #print(series[max_idx - size_r:max_idx])
         return series[max_idx - size_r:max_idx]
     else:
         random.seed()
