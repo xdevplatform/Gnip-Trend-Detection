@@ -3,7 +3,6 @@
 *.json
 *log
 *out
-*png
 *.txt
 *.csv
 *.swp
