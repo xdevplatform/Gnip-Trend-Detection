@@ -203,6 +203,6 @@ if __name__ == "__main__":
     if args.input_file_names is []:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
-   
+  
     final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,**kwargs)
     pickle.dump(final_sorted_data_tuples,open(args.output_file_name,"w"))

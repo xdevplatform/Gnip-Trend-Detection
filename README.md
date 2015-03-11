@@ -1,58 +1,65 @@
 # Introduction
 
-This software provides some simple methods of trend detection.
-It include code for creating even-sized time buckets ("bins"),
+This repository contains the "Trend Detection in Social Data" whitepaper
+and software that implements the models discussed in the paper. 
+The software consists of code for creating even-sized time buckets ("bins"),
 running point-by-point trend detection models on the data,
 and plotting relevant time series. 
+
+# Whitepaper
+
+The trends whitepaper source can be found in the `paper` directory, which
+also includes a subdirectory for the figures `figs`. A PDF version of the 
+paper is included but it is not gaurenteed to be up-to-date. 
+
+# Software
 
 This software is designed to work easily with the [Gnip-Stream-Collector-Metrics]
 (https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package, configured to read
 from a Gnip PowerTrack stream. However, any time series data can be easily
 transformed into form useable by the scripts in this package. 
 
-# Structure
+## Structure
 
 The work is divided into three basic tasks:
 
 * Bin choice - The original data is collected into larger, even-sized bins,
-sized to the user's wish
+sized to the user's wish. This is performed by `trends/rebin.py`. 
 * Analysis - Each data point is analyzed according to a model implemented in
-the `models.py` file. Models return a figure-of-merit (eta) for each point.
+the `trends/models.py` file. Models return a figure-of-merit (eta) for each point.
 * Plotting - The original time series is plotted and overlaid with a plot of the eta values. 
+This is performed by `trends.plot.py`. 
 
-# Example
+## Configuration
 
-Suppose you have data from January 26, 2015 stored at /mnt/data, 
-in the hierarchical directory format produced by Gnip-Stream-Connector-Metrics. 
-A typical file might be `/mnt/data/2015/01/26/00/Twitter_2015-01-26_0049.counts`. 
+All the scripts mentioned in the previous section assume the presence of a configuration
+file. By default, its name is `config.cfg`. You can find a template at `config.cfg.example`.
+A few parameters can by set with command-line argument. Use the scripts' `-h` option
+for more details.
 
-Now, imagine you want to analyze data from hourly time buckets.
-The first step is to run the rebin script for the desired time range, time bucket size, and rule.
-We choose the full data, with 60 minute time buckets. 
+## Example
 
-`python src/rebin.py -a 20150126000000 -o 20150127000000 -r "my_favorite_rule" -b minutes -n 60 -i /mnt/data/2015/01/26/*/*counts`
+A full example has been provided in the `example` directory. In it, you will find
+formatted time series data for mentions of the "#scotus" hashtag in August-September 2014.
+This file is `example/scotus.txt`. In the same directory, there is a configuration file.
 
-This will produce a file, `output.pkl` by default, 
-which contains a (serialized) list of (TimeBucket, count) tuples.  
+The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
+Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
 
-Then we run the analyze script, which reads from this file by default.
-We use the default point-by-point Poisson model, with 95% confidence intervals:
+`python trends/rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
 
-`python src/analyze.py -m lc -a 0.95`
+Next, we will run the analysis script, which when run alone, should return nothing.
+Remember, all the modeling specification is in the config file.
 
-This will return list of tuples with the following fields:
+`python trends/analyze.py -i example/scotus.pkl -c example/config.cfg`
 
-| TimeBucket info | count | eta |
-| --------------  | ----- | --- |
+To see more interesting results, let's run the plotting after the analysis, both of which 
+are packaged in the plotting script:
 
-For all techniques implemented in `models.py`, we use "eta" to refer
-to the relevant figure-of-merit.
+`python trends/analyze.py -i example/scotus.pkl -c example/config.cfg -t "scotus"` 
 
-If we wish to analyze, model, and plot in one shot, we can go straight to 
-the plotting script, and use the same options:
+The output PDF should be in the example directory and look like:
 
-`python src/plot.py -m lc -a 0.95`
+!(example/scotus.pdf) 
 
-This will run the analyze script as above and plot the data overlaid with eta values.
 
-See the scripts' `-h` menus for more options.

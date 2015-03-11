@@ -42,7 +42,7 @@ if __name__ == "__main__":
     if args.config_file_name is not None:
         config = ConfigParser.SafeConfigParser()
         config.read(args.config_file_name)
-        model_name = config.get("model","model_name")
+        model_name = config.get("analyze","model_name")
         model_config = dict(config.items(model_name + "_model"))
     else:
         model_config = {"alpha":0.99,"mode":"lc","period_list":["hour"]}
