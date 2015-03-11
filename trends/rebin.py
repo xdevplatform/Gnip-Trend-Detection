@@ -36,8 +36,8 @@ import models
 from trends.time_bucket import TimeBucket
 
 # timestamps read from files are expected in this format
-EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-#EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
+#EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 # keyword arguments start/stop time are expected in this format
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c",dest="config_file_name",default=None)   
-    parser.add_argument("-i",dest="input_file_names",default=None)   
+    parser.add_argument("-i",dest="input_file_names",nargs="+",default=[])    
     parser.add_argument("-d",dest="input_file_base_dir",default=None)   
     parser.add_argument("-p",dest="input_file_postfix",default="counts")    
     parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             for fname in fnmatch.filter(filenames,"*"+args.input_file_postfix):
                 args.input_file_names.append(os.path.join(root,fname))
 
-    if args.input_file_names is None:
+    if args.input_file_names is []:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
    
