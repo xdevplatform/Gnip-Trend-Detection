@@ -19,6 +19,10 @@ This software is designed to work easily with the [Gnip-Stream-Collector-Metrics
 from a Gnip PowerTrack stream. However, any time series data can be easily
 transformed into form useable by the scripts in this package. 
 
+## Requirements
+
+ * scipy
+
 ## Structure
 
 The work is divided into three basic tasks:
@@ -56,10 +60,10 @@ Remember, all the modeling specification is in the config file.
 To see more interesting results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
 
-`python trends/analyze.py -i example/scotus.pkl -c example/config.cfg -t "scotus"` 
+`python trends/plot.py -i example/scotus.pkl -c example/config.cfg` 
 
 The output PDF should be in the example directory and look like:
 
-!(example/scotus.pdf) 
+![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/tree/master/example/scotus.pdf) 
 
 
