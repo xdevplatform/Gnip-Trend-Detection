@@ -62,8 +62,8 @@ are packaged in the plotting script:
 
 `python trends/plot.py -i example/scotus.pkl -c example/config.cfg` 
 
-The output PDF should be in the example directory and look like:
+The output PNG should be in the example directory and look like:
 
-![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/tree/master/example/scotus.pdf) 
+![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/tree/master/example/scotus.png) 
 
 
