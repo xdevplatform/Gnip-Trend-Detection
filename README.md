@@ -64,6 +64,6 @@ are packaged in the plotting script:
 
 The output PNG should be in the example directory and look like:
 
-![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/tree/master/example/scotus.png) 
+![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus.png?raw=true) 
 
 
