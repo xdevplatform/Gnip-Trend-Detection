@@ -33,7 +33,7 @@ import fnmatch
 import os
 
 import models
-from trends.time_bucket import TimeBucket
+from time_bucket import TimeBucket
 
 # timestamps read from files are expected in this format
 #EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
