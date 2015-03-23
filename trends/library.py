@@ -60,16 +60,16 @@ class Library(object):
         """
         # transformations to be run on reference series
         self.transformations = []
-        self.transformations.append(unit_normalization)
         self.transformations.append(spike_normalization)
         self.transformations.append(smoothing)
+        self.transformations.append(unit_normalization)
         self.transformations.append(logarithmic_scaling)
         self.transformations.append(sizing)
         # transformations to be run on test series
         self.test_transformations = []
-        self.test_transformations.append(unit_normalization)
         self.test_transformations.append(spike_normalization)
         self.test_transformations.append(smoothing)
+        self.test_transformations.append(unit_normalization)
         self.test_transformations.append(logarithmic_scaling)
         
         self.config = {}
@@ -85,16 +85,12 @@ class Library(object):
         Take care not to allow duplicates.
         """
         if lib.trends != []:
-            if self.trends == []:
-                self.trends = lib.trends
-            else:
-                self.trends = list(set(self.trends.extend(lib.trends)))
+            assert self.trends == []
+            self.trends = lib.trends
+
         if lib.non_trends != []: 
-            if self.non_trends == []:
-                self.non_trends = lib.non_trends
-            else:
-                self.non_trends = list(set(self.non_trends.extend(lib.non_trends)))
-        #self.transformations = set(self.transformations.extend(lib.transformations))
+            assert self.non_trends == []
+            self.non_trends = lib.non_trends
 
 def unit_normalization(series, config):
     size = len(series)
@@ -131,10 +127,10 @@ def logarithmic_scaling(series, config):
     new_series = []
     series_min = min(series)
     for pt in series:
-        if pt <= 0:
-            pt = 0.00001
-        new_series.append(math.log10(pt)) 
-        #new_series.append(math.log10(pt + series_min + 1))
+        #if pt <= 0:
+        #    pt = 0.00001
+        #new_series.append(math.log10(pt)) 
+        new_series.append(math.log10(pt + 1))
     return new_series
 
 def sizing(series, config):

@@ -1,17 +1,22 @@
 import sys
 import json
 import argparse
+import ConfigParser
 
 sys.path.insert(0,"/home/jkolb/Gnip-Trend-Detection/src/")
 import library
 
 parser = argparse.ArgumentParser() 
 parser.add_argument("-t",dest="is_trend",action="store_true",default=False) 
-parser.add_argument("-r",dest="reference_length",type=int,default=50) 
+parser.add_argument("-c",dest="config_file_name",default="config.cfg") 
 parser.add_argument("-l",dest="library_file_name",default="test_librarly.pkl")
 args = parser.parse_args()
 
-lib = library.Library(args.reference_length=60)
+cp = ConfigParser.ConfigParser()
+cp.read(args.config_file_name)
+model_config = dict(cp.items("WeightedDataTemplates_model"))
+
+lib = library.Library(config=model_config)
 
 for line in sys.stdin:
     data = json.loads(line)

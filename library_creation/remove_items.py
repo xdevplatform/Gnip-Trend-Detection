@@ -12,7 +12,11 @@ and remove those found in the provided trending topics file.
 
 trends = [line for line in open(sys.argv[1])]
 for topic in sys.stdin:
-    if topic not in trends:
+    found=False
+    for trend in trends:
+        if topic == trend or topic in trend:
+            found=True
+    if not found:
         sys.stdout.write(topic)
     else:
         sys.stderr.write("removed " + topic) 
