@@ -59,12 +59,13 @@ def rebin(**kwargs):
     else:
         lvl = logging.INFO
         logr = logging.getLogger("rebin")
-        
-        fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
-        hndlr = logging.StreamHandler()
-        hndlr.setFormatter(fmtr)
-        hndlr.setLevel(lvl)
-        logr.addHandler(hndlr) 
+    
+        if logr.handlers == []:
+            fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
+            hndlr = logging.StreamHandler()
+            hndlr.setFormatter(fmtr)
+            hndlr.setLevel(lvl)
+            logr.addHandler(hndlr) 
         logr.setLevel(lvl)
 
     if "rule_counter" not in kwargs:
@@ -150,7 +151,7 @@ def rebin(**kwargs):
         for idx,count in sorted(final_data.items(), key=operator.itemgetter(0)):  
             dt = grid[idx]
             final_sorted_data_tuples.append((dt,count))
-            logr.debug("{} {}\n".format(dt,count))
+            logr.debug("{} {}".format(dt,count))
 
         # a mystery
         try:
@@ -171,6 +172,15 @@ def rebin(**kwargs):
         logr.error(e)
 
 if __name__ == "__main__":
+   
+    # set up a logger
+    logr = logging.getLogger("rebin")
+    logr.setLevel(logging.DEBUG)
+    if logr.handlers == []:
+        fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
+        hndlr = logging.StreamHandler()
+        hndlr.setFormatter(fmtr)
+        logr.addHandler(hndlr) 
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c",dest="config_file_name",default=None)   
@@ -178,6 +188,7 @@ if __name__ == "__main__":
     parser.add_argument("-d",dest="input_file_base_dir",default=None)   
     parser.add_argument("-p",dest="input_file_postfix",default="counts")    
     parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
+    parser.add_argument("-v",dest="verbose",action="store_true",default=False)    
     args = parser.parse_args()
 
     # parse config file
@@ -204,5 +215,8 @@ if __name__ == "__main__":
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
   
-    final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,**kwargs)
+    if args.verbose:
+        final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,logger_name="rebin",**kwargs)
+    else:
+        final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,**kwargs)
     pickle.dump(final_sorted_data_tuples,open(args.output_file_name,"w"))

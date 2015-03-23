@@ -27,7 +27,6 @@ def analyze(generator, model, logr):
 if __name__ == "__main__":
     
     logr = logging.getLogger("analyzer")
-    #logr.setLevel(logging.DEBUG)
     if logr.handlers == []:
         fmtr = logging.Formatter('%(asctime)s %(name)s - %(levelname)s - %(message)s') 
         hndlr = logging.StreamHandler()
@@ -37,6 +36,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
     parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
+    parser.add_argument("-v",dest="verbose",action="store_true",default=False)
     args = parser.parse_args()
 
     if args.config_file_name is not None:
@@ -47,6 +47,9 @@ if __name__ == "__main__":
     else:
         model_config = {"alpha":0.99,"mode":"lc","period_list":["hour"]}
         model_name = "Poisson"
+    
+    if args.verbose:
+        logr.setLevel(logging.DEBUG)
 
     model = getattr(models,model_name)(config=model_config) 
     generator = pickle.load(open(args.input_file_name))
