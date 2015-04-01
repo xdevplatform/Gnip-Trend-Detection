@@ -57,77 +57,87 @@ discover, measure, compare and discuss changes in time series data that arise
 from online social interactions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Trends and Events}  
-\label{definitions}
+\section{Trends and Events}  \label{definitions}
 
 We measure time-dependent user behavior with bucketed counts of mentions,
-hashtags, followers, friends, links, or any quantity that can be counted
-over time. If this quantity is defined by the presence of a word or
-phrase, that word or phrase is called the \textit{topic}. When discussing changes
-in a social data time series, we must speak concretely about what kinds of
-change are interesting. For example, growth over
-time of an audience is a simple but important measure of change. Similarly, we
-may want to know about seasonal cycles of change. How does June compare to
-December? Against the backdrop of steady growth and cyclic variations, we can
-ask about emerging changes, in which a count rises from something negligible or
-unimportant to something significant. We are also interesting in structural
-changes, where a time series abruptly shifts from one state to another.
+hashtags, followers, friends, links, or any quantity that can be counted over
+time. If this quantity is defined by the presence of a word or phrase, that
+word or phrase is called the \textit{topic}. When discussing changes in a
+social data time series, we must speak concretely about what kinds of change
+are interesting. For example, growth over time of an audience is a simple but
+important measure of change. Similarly, we may want to know about seasonal
+cycles of change. How does June compare to December? Against the backdrop of
+steady growth and cyclic variations, we can ask about emerging changes, in
+which a count rises from something negligible or unimportant to something
+significant. We are also interesting in structural changes, where a time series
+abruptly shifts from one state to another.
 
-\subsection{Difficulties}
-Identifying growth, cycles, and especially emerging and material changes, is
-hard. Why? A primary difficulty is the fact that we often don’t know in advance
-the scale or size of the change. The time interval over which a change occurs
-can range from fractions of seconds to years, a difference of 10 orders of
-magnitude! The size of the change can range from counts of 10s through counts
-of billions. The community of users generating or associated with the change
-can range from a single person through a group of 100 million people. It is
-difficult to construct algorithms that function evenly over such broad ranges
-of data. Finally, we know that change of many sorts is happening all the time,
-and we want to take care to identify single, rather than composite, changes.
+\subsection{Difficulties} Identifying growth, cycles, and especially emerging
+and structural changes, is hard. Why? A primary difficulty is the fact that we
+often don’t know in advance the scale or size of the change. The time interval
+over which a change occurs can range from fractions of seconds to years, a
+difference of 10 orders of magnitude! The size of the change can range from
+counts of 10s through counts of billions. The community of users generating or
+associated with the change can range from a single person through a group of
+100 million people. It is difficult to construct algorithms that function
+evenly over such broad ranges of data. Finally, we know that change of many
+sorts is happening all the time, and we want to take care to identify single,
+rather than composite, changes.
 
-The corpus of social data is enormous, and this size brings about
-other difficulties. Most signals of interest are relatively
-small.
-Data that match a particular topical filter are usually contaiminated
-by other sources, and changes in the data reflect the cumulative result
-of all underlying effects. 
-The size of the data also implies the existence of many
-atypical patterns that are entirely due to statistical variation, rather than
-reflecting real-world events. Yet, humans prefer to associate any changes with
-meaningful and nameable events. This is true whether the change is anticipated
-or not. Even the distinction between the “real-world” and the online social
-interactions is complicated. Not only is the real world reflected in the social
-data, but the online social interactions in turn affect the offline world.
-It is sometimes difficult to establish causality.  
+The corpus of social data is enormous, and this size brings about other
+difficulties. Most signals of interest are relatively small.  Data that match a
+particular topical filter are usually contaiminated by other signals, and
+changes in the data reflect the cumulative result of all underlying effects.
+The size of the data also implies the existence of many atypical patterns that
+are entirely due to statistical variation, rather than reflecting real-world
+events. Yet humans prefer to associate any changes with meaningful and
+nameable events. 
+%This is true whether the change is anticipated or not. 
+Even
+the distinction between the “real world” and the online social interactions is
+complicated, and it can be
+difficult to establish causality. Do the social data simply reflect the offline
+world? How do online social interactions affect the rest of the world? 
+The first step in unravelling this tangled feedback network is to 
+qauntify the social data trends.  
 
 \subsection{Analysis Trade-offs}
-Attempts to quantify changes in social data are subject to trade-offs. In
-particular, we identify three measures of performance, which cannot be
-simultaneously optimized. First is the lag time, or the time between the
-real-world event and the detection in the social data. Second is the confidence
-that the change is real, and not a fluke. Last is the sensitivity to a
-genuinely anomalous situation. For example, if we wish to \textit{quickly} identify an
-emerging change, and we wish to do so with \textit{high confidence} that we’re not
-detecting a random fluctuation, we will necessarily have low sensitivity and be
+Attempts to quantify changes in social data are subject to trade-offs. 
+At times, statistical noise in the data will be identified as a trend.
+At other times, real trends will not be identified. We identify three 
+particular measures of performance that account for these types of mistakes.
+First is the \textit{time-to-detection}, or the time between the
+real-world event and the detection in the social data. 
+Second is the \textit{precision}, or the fraction of identified trends 
+that are not statistical flukes. 
+Last is the \textit{recall}, or the fraction of real trends that are identified
+by the trend detection scheme.
+These performance metrics can not be simultaneously optimized.
+For example, if we wish to quickly identify an
+emerging change, and we wish to do so with high confidence that we’re not
+detecting random fluctuations, we will necessarily have 
+low recall for real trends, and be 
 able to only identify very statistically significant patterns.
 
 \subsection{Classification}
-Once the parameters of the detection scheme are set, humans have to interpret
+Once the detection scheme is defined, humans have to interpret
 and act on anomalous events as they are observed. These actions can take the
 following forms:
 
 \begin{itemize} 
-    \item alerting - we start paying attention to something new and urgent 
-    \item informing - we note the relative state of things available when someone 
+    \item alerting - start paying attention to something new and urgent 
+    \item informing - note the relative state of things available when someone 
         checks 
-    \item discovery - we do iterative refinement for novelty detections or root 
+    \item discovery - do iterative refinement for novelty detections or root 
         cause analysis 
-    \item model building - we enable downstream consumption of the signal for 
+    \item model building - enable downstream consumption of the signal for 
         other modeling purposes 
 \end{itemize}
 
 Given these challenges and considerations, let’s organize the analysis around
-three classes of anomalies, as seen in Figure~\ref{fig:anomalies}.
+three classes of anomalies, as seen in Figure~\ref{fig:anomalies}. While
+anomolous decreases in time series can be interesting, we will limit ourselves
+for the duration of the paper to the specific case of atypical increases.
 
 \textbf{Ramp-up}: from a well-understood steady state (negligible, constant, or
 periodic), the time series exhibits a continuing increase that is sustained
@@ -138,13 +148,13 @@ series shifts abruptly to a significantly different value and maintains that
 value over a time span much longer than the time resolution. 
 
 \textbf{Pulse}: from a well-understood steady state, the value of a time series
-increases significantly, then returns to previously-typical values. It can be
-useful to distinguish between pulses with widths similar to the time
-resolution, and those with widths much larger than the time resolution. Another
-technique for characterizing a pulse is to measure the area under it, which
-takes into account magnitude as well as duration. 
+increases significantly, then returns to previously-typical values.
+Pulses with widths similar to the time resolution capture the briefest
+events that can be observed. Those with widths much larger than 
+the time resolution represent extended events that can be further
+characterized by the area under the pulse.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/anomalies.png}
 \caption{Three basic types of anomalies.}
@@ -158,17 +168,17 @@ A higher-level feature like a cycle can also be thought of as a sequence of
 these anomalies. 
     
 A final challenge is the mapping between anomalies and real-world events. The
-word event can refer to a nameable change (e.g. Superbowl mentions), but it can
+word ``event'' can refer to a nameable change (e.g. Superbowl mentions), but it can
 also refer to any interval in a time series that is sufficiently atypical, with
 no meaning attached. In the remainder of this paper, we use the word event to
-refer to significant happenings in the offline world.. 
+refer to specific, nameable happenings in the either the online or the offline world. 
 
 We encourage the reader the systematically think about what sorts of change
 are important to the problem they’re trying to solve, and what sorts of
 action are to be taken upon detection. Identifying and characterizing
 atypical behavior in social data time series can be difficult, but it it
 provides us with brand-new insights into group behavior and the interplay
-between the online and the physical world.  
+between the online and the offline world.  
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -176,24 +186,30 @@ between the online and the physical world.
 \label{techniques}
 
 In the section, we will work through the details of a simple technique for
-trend detection in a time series defined by some topic. We will then briefly
+trend detection in a time series defined by a topic on Twitter. We will then briefly
 review a set of other techniques that extend, generalize, or improve on the
 simple case. See the Appendix for a link to implementations of these
 techniques.
 
-Most techniques for identifying trending behavior define a background model,
+Many techniques for identifying trending behavior define a background model,
 which can be thought to represent the null hypothesis, or the case of “no
-trend”. Significant deviations from the background model can be said to
-disprove the null hypothesis. We say that the topic is trending at the time the
-deviation reaches a certain significance. To quantify the deviation from the
-background model, we typically must choose some parameter values. 
+trend”. Deviations from the background model are described by a figure-of-merit
+called $\eta$,
+and large values of $\eta$ can be said to disprove the null hypothesis. 
+In other techniques, the model includes both a background component and
+and trend-like component. In these cases, the $\eta$ value quantifies the 
+extent to which the data look more like a trend than a non-trend. 
+Whatever the model, we say that the topic is trending at the time the
+$\eta$ exceeds a pre-determined value. 
 
-If we have access to data that is labeled with truth (trend or no-trend), we
+To calculate $\eta$, we typically must choose some model parameter values. 
+If we have access to historical data that is labeled with truth 
+(trend or no-trend) and the true trend start time, we
 can measure the performance of a choice of model and parameter values, in terms
-of the false-positive rate, the coverage, and time-to-detection. By coverage,
-we mean the fraction of true trends that are identified by the algorithm. By
-time-to-detection, we mean the difference in time between the actual start of
-the trend and the first detection of it.
+of the precision, the recall, and time-to-detection. 
+%By recall, we mean the fraction of true trends that are identified by the algorithm. 
+By time-to-detection, we mean the difference in time between the true start of
+the trend and the first detection of it. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Point-by-point Poisson Model}
@@ -275,11 +291,11 @@ In this case, $\alpha=0.99$. }
 
 Once a value of $\alpha$ is chosen, the definition and identification of a trend is
 still dependent on the choice of two parameters values: $\eta_c$ and the time
-interval for a single data point. As $\eta_c$ is increased, the false positive rate
-are reduced, but more real trends are missed (decreased coverage or true
-positive rate). A similar trade-off exists for the bin width, as shown in
+interval for a single data point. As $\eta_c$ is increased, the precision is increased, 
+but more real trends are missed (decreased recall). 
+A similar trade-off exists for the bin width, as shown in
 Figure~\ref{fig:scotus2}: small bins provide faster identification of trends, but lead to
-more false-positives.
+worse precision.
 
 \begin{figure}
 \begin{center}
@@ -307,7 +323,7 @@ cycles of activity. For example, if the majority of users that generate a
 particular body of tweets live in a narrow band of time zones, we would
 naturally expect to see fewer tweets during night hours for those time zones.
 Thus, the patterns of hours, days, weeks, and even months can be reflected in
-changes in rates of social media engagement. 
+changes in rates of social media use. 
 
 To reduce the rate of false trend identification due to expected, cyclic human
 activity, the cycle-corrected Poisson model builds on the foundation of the
@@ -349,8 +365,8 @@ $\alpha=0.99$.} \label{fig:scotus3}
 \includegraphics[width=0.95\textwidth]{fig/scotus_1month_ccpm.pdf}
 \caption{Counts of ``\#scotus'' mentions, in 1-hour time buckets. The time series
 data are shown in the blue dots with black lines. For each point, $\eta$ is
-calculated based on the average value from the same hour on previous days, and
-plotted in red. In this case, $\alpha=0.99$. }
+calculated based on the average value from the same hour on previous days
+in the time series, and plotted in red. In this case, $\alpha=0.99$. }
 \label{fig:scotus4}
 \end{center}
 \end{figure}
@@ -359,7 +375,7 @@ Continuing to expand on the basic Poisson model, there is a variety of
 further improvements that can be made. Any value chosen for the Poisson
 mean can be further stabilized by calculating an average over a rolling
 window of adjacent data points. If the long-term overall growth rate for
-the social media source is known, this baseline can be subtracted from the
+the data is known, this baseline can be subtracted from the
 data. Ihler, Hutchins, Smyth \cite{Ihler:2006} present a
 framework for removing the effects of previously-occurring anomalies from
 the Poisson background model. 
@@ -382,22 +398,25 @@ Nikolov suggests we do just this in a non-parametric method \cite{Nikolov:2011}.
 begin by compiling a library of labeled time series, identifying each as
 trending or non-trending. We then define a weight that is a function of the
 distance between a labeled time series and the data in question. The final
-result is a simple ratio of the total weight for the trending time series
+result is simply the ratio of the total weight for the trending time series
 divided by the total weight for the non-trending time series. 
 
 We start by collecting \textit{reference} time series from historical data. Based on their
 shape and the details of real-life events associated with them, we label
-them “$+$” (trending) or “$-$” (non-trending). In general, these examples ($R+$
-and $R-$) are much longer than the time series that they are compared to. 
+them “$+$” (trending) or “$-$” (non-trending). The sets of references time
+series are named $R+$ and $R-$, and typically haves sizes in the 100s. 
+In general, the elements of $R+$ and $R-$ are much 
+longer than the time series that they are compared to. 
 
 We next define a distance between two same-length time series: $d(r,s)$,
 where $r$ is in $R+$ or $R-$ and $s$ is the time series that we’re evaluating for
-trending behavior. For simplicity, we use the Euclidean distance:
+trending behavior. To facilitate comparison, both time series are unit-normalized. 
+We use the Euclidean distance:
 \begin{equation}
-    d(r,s) = \Sigma_{N_i}(r_i - s_i)^2,
+    d(r,s) = \Sigma_i^N(r_i - s_i)^2,
 \end{equation}
 where $r_i$ and $s_i$ are the $i$-th points in the $N$-length time series $r$ and $s$. Other
-choices of distance functions emphasize different different properties of the
+choices of distance functions emphasize different properties of the
 time series, and lead to different value of the trend detection metrics
 discussed below. If $r$ is longer than $s$, we define the distance to be the
 smallest of all distances $d(r_s,s)$, where $r_s$ is any $s$-length sub-series of $r$. Given
@@ -412,7 +431,7 @@ produce a final metric from their ratio:
     \eta(s) = \frac{\Sigma_{r\in R+}W(r,s)}{\Sigma_{r\in R-}W(r,s)} 
 \end{equation}
 To demonstrate the performance of this technique on a known trend,
-Figure~\ref{fig:nikolov_eta} shows a plot of an element of R+ ($s+$), along with $\eta(s+)$.
+Figure~\ref{fig:nikolov_eta} shows a plot of an element of R+ ($s+$), along with $\eta$.
 The $\eta$ curve rises dramatically soon after the real spike in the
 data, with the lagtime demonstrating the effect of the data-smoothing.
 
@@ -424,24 +443,22 @@ data, with the lagtime demonstrating the effect of the data-smoothing.
 (minus the one being tested) and 500 reference non-trends in $R-$, the figure of
 merit $\eta$ is calculated for each point and plotted in black. The length of
 elements of $R$ is 200 minutes, while the length of the tested series ($s$) is 100
-minutes. For distance calculations, the data are smoothed over a 40 minute 
-window.}
+minutes. 
+%For distance calculations, the data are smoothed over a 40 minute window.
+}
 \label{fig:nikolov_eta} 
 \end{center}
 \end{figure}
 
 The primary difficulty with this method is the need for a labeled set of reference time
 series. To obtain similar detection performance over a broad range of trend shapes and sizes, 
-it is important to smooth and apply other transformations to $r$ and $s$.
-Examples of the transformed reference time series are shown in Figure~\ref{fig:reference_series}.
+it is also important to apply a series of transformations to all $r$ and $s$.
+In our implementation, these transformation include the previously-mentioned unit normalization, 
+a smoothing with an average taken over a sliding window,
+and a logarithmic scaling
 (see \cite{Nikolov:2011} or the code referenced in the Appendix
 for details of the transformations). 
-However, once the library is created, it can be used
-for all future analyses. The performance of the algorithm still depends on a
-few parameters. Even though the shapes of the labeled time series are take from
-data, the analyst still must choose the time resolution and length of those
-series. The analyst must also choose an appropriate value for the scaling
-parameter and define any other transformations applied to the time series. 
+Examples of the transformed reference time series are shown in Figure~\ref{fig:reference_series}.
 
 \begin{figure}
 \begin{center}
@@ -454,11 +471,20 @@ while changes in series in $R-$ are more evenly distributed.}
 \end{center}
 \end{figure}
 
-The values chosen for the scaling parameter, time series length, time series
-precision, and other transformation parameters lead directly to the
-false-positive rate and coverage metrics. With the labeled reference series
+%Once a reference library is created and the transformations defined, this setup can be used
+%for any future analysis. 
+%The performance of this algorithm is controlled by the values of
+Even though the shapes of the labeled time series provide the model for
+trending and non-trending time series, the analyst still controls the performance
+of the algorithm by setting parameter values.
+%must choose the time resolution and length of those
+%series. The analyst must also choose an appropriate value for the scaling
+%parameter and define any other transformations applied to the time series. 
+The values chosen for the scaling parameter, the lengths of $s$ and $r$, time series
+precision, and any other transformation parameters lead directly to the
+precision and recall metrics. With the labeled reference series
 in hand, we can easily calculate these metrics by removing a single
-element from the labeled $R$ and testing it against the ensemble. 
+element from $R+$ or $R-$ and testing it against the ensemble. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
