@@ -30,8 +30,9 @@
 \section{Introduction}
 \label{intro}
 
-Interactions in social data tell us about the real world. By
-understanding the time-dependent behavior of groups of social media users, we
+Interactions in social data tell us about the real world, and this view of the world 
+is not limited to snapshots in time. 
+By understanding the time-dependent behavior of groups of social media users, we
 can identify and even predict important real-world trends. 
 
 What sort of real-world activities, events, and trends might be reflected in
@@ -48,7 +49,8 @@ atypical from the typical, but it also allows them to compare one atypical
 event to another. Are there characteristics of the atypical events that allow
 them to be separated into groups that can be assigned real-world meaning (e.g.
 seasonal trends, holiday events)? If so, do these assignments point toward a
-particular choice of model? If the identification of an atypical period of time
+particular choice of quantitative model for the event? 
+If the identification of an atypical period of time
 can be quantified, can it be automated? And can it be used to predict future
 behavior?
 
@@ -61,7 +63,7 @@ from online social interactions.
 
 We measure time-dependent user behavior with bucketed counts of mentions,
 hashtags, followers, friends, links, or any quantity that can be counted over
-time. If this quantity is defined by the presence of a word or phrase, that
+time. If that quantity is defined by the presence of a word or phrase, that
 word or phrase is called the \textit{topic}. When discussing changes in a
 social data time series, we must speak concretely about what kinds of change
 are interesting. For example, growth over time of an audience is a simple but
@@ -74,9 +76,9 @@ abruptly shifts from one state to another.
 
 \subsection{Difficulties} Identifying growth, cycles, and especially emerging
 and structural changes, is hard. Why? A primary difficulty is the fact that we
-often don’t know in advance the scale or size of the change. The time interval
+often don't know in advance the scale or size of the change. The time interval
 over which a change occurs can range from fractions of seconds to years, a
-difference of 10 orders of magnitude! The size of the change can range from
+difference of 10 orders of magnitude! Additionally, the size of the change can range from
 counts of 10s through counts of billions. The community of users generating or
 associated with the change can range from a single person through a group of
 100 million people. It is difficult to construct algorithms that function
@@ -103,7 +105,7 @@ qauntify the social data trends.
 
 \subsection{Analysis Trade-offs}
 Attempts to quantify changes in social data are subject to trade-offs. 
-At times, statistical noise in the data will be identified as a trend.
+At times, random fluctuations in the data will be identified as a trend.
 At other times, real trends will not be identified. We identify three 
 particular measures of performance that account for these types of mistakes.
 First is the \textit{time-to-detection}, or the time between the
@@ -154,7 +156,7 @@ events that can be observed. Those with widths much larger than
 the time resolution represent extended events that can be further
 characterized by the area under the pulse.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/anomalies.png}
 \caption{Three basic types of anomalies.}
@@ -173,8 +175,8 @@ also refer to any interval in a time series that is sufficiently atypical, with
 no meaning attached. In the remainder of this paper, we use the word event to
 refer to specific, nameable happenings in the either the online or the offline world. 
 
-We encourage the reader the systematically think about what sorts of change
-are important to the problem they’re trying to solve, and what sorts of
+We encourage the reader to systematically think about what sorts of change
+are important to the problem they're trying to solve, and what sorts of
 action are to be taken upon detection. Identifying and characterizing
 atypical behavior in social data time series can be difficult, but it it
 provides us with brand-new insights into group behavior and the interplay
@@ -208,8 +210,8 @@ If we have access to historical data that is labeled with truth
 can measure the performance of a choice of model and parameter values, in terms
 of the precision, the recall, and time-to-detection. 
 %By recall, we mean the fraction of true trends that are identified by the algorithm. 
-By time-to-detection, we mean the difference in time between the true start of
-the trend and the first detection of it. 
+%By time-to-detection, we mean the difference in time between the true start of
+%the trend and the first detection of it. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Point-by-point Poisson Model}
@@ -223,7 +225,8 @@ given topic, but the large Twitter user base leads to significant counts. We
 can do a rather simple form of trend detection by assuming that the counts in a
 social data time series are Poisson-distributed around some average value, and
 then looking for unlikely counts according to the Poisson model. Consider, for example,
-the number of tweets in some time interval that contain the hashtagged phrase ``\#scotus''.
+the number of tweets in some time interval that contain the hashtagged phrase ``\#scotus''
+(referencing the Supreme Court of the United States).
 If we ignore variations in the overall rate of tweeting, we might expect the
 counts of ``\#scotus''-containing tweets to vary, but the distributions of counts
 will generally follow the Poisson distribution,
@@ -250,10 +253,13 @@ reject the null hypothesis when
 \begin{equation}
     c_i >= \eta_c \cdot \textrm{CI}(\alpha, c_{i-1}) + c_{i-1},
 \end{equation}
-for predetermined values of $\eta_c$ and $\alpha$. 
-The references in
-the Appendix have code that produces high-precision estimates of the
-Poisson confidence intervals. In Figure~\ref{fig:scotus1}, we plot the hourly counts for a
+for predetermined values of $\eta_c$ and $\alpha$. Together, these two parameters
+control the performance of the algorithm. 
+%The references in
+%the Appendix have code that produces high-precision estimates of the
+Poisson confidence intervals. 
+
+In Figure~\ref{fig:scotus1}, we plot the hourly counts for a
 data set defined by the ``\#scotus'' hashtag. While there may be minor events
 driving mentions of ``\#scotus'', this time series does not contain any major
 real-world events, and the values of $\eta$ are relatively low.
@@ -273,7 +279,7 @@ background description by assuming a very simple model. Yet this
 simplicity can be a source of challenges. First, we see that the data are
 generally not Poisson-distributed around the previous data point. For example,
 given a choice of $\alpha=0.99$, we should see values of $\eta>1$ only about 1\% of the
-time. Still, the parameter $\eta$ is indicative of atypical counts, just not with
+time. Nevertheless, the parameter $\eta$ is indicative of atypical counts, just not with
 the usual probability interpretation. For example, Figure~\ref{fig:jobs} shows a time series with a
 very distinctive, large spike, and the corresponding values of $\eta$ are very 
 large.
@@ -348,7 +354,7 @@ of false positives. Figures~\ref{fig:scotus3} and \ref{fig:scotus4} shows a comp
 background model discussed in this and in the previous section. The
 cycle-corrected model shows generally reduced $\eta$ values (fewer false
 positives), but actually produces a greater $\eta$ value at the initial spike
-around Sept. 20. 
+around hour 650. 
 
 \begin{figure}
 \begin{center}
@@ -387,7 +393,7 @@ the Poisson background model.
 \label{nikolov}
 
 There is a two-fold drawback to the Poisson models: first, it is impossible to
-choose a value for $\eta_c$ that is a good choice for trends of all shapes
+choose values for $\alpha$ and $\eta_c$ that are a good choice for trends of all shapes
 and sizes. Moreover, our decision to use the Poisson distribution as a model
 for the variations in the data is not necessarily a good choice. In fact, we
 know that many social data time series are not Poisson-distributed. What if we
@@ -398,13 +404,13 @@ Nikolov suggests we do just this in a non-parametric method \cite{Nikolov:2011}.
 begin by compiling a library of labeled time series, identifying each as
 trending or non-trending. We then define a weight that is a function of the
 distance between a labeled time series and the data in question. The final
-result is simply the ratio of the total weight for the trending time series
+result is given by the ratio of the total weight for the trending time series
 divided by the total weight for the non-trending time series. 
 
 We start by collecting \textit{reference} time series from historical data. Based on their
 shape and the details of real-life events associated with them, we label
 them “$+$” (trending) or “$-$” (non-trending). The sets of references time
-series are named $R+$ and $R-$, and typically haves sizes in the 100s. 
+series are named $R+$ and $R-$ (and together comprise $R$), and typically haves sizes in the 100s. 
 In general, the elements of $R+$ and $R-$ are much 
 longer than the time series that they are compared to. 
 
@@ -425,20 +431,25 @@ parameter $\lambda$.
 \begin{equation}
     W(r,s) = e^{-\lambda\cdot d(r,s)}
 \end{equation}
+The parameter $\lambda$ controls the relative importance of very similar vs. very
+different reference series. For example, a large value of lambda generates very
+small weights for elements of $R$ very different from $s$. 
+
 We then sum up the weights from the trending and non-trending comparisons and
 produce a final metric from their ratio:
 \begin{equation}
     \eta(s) = \frac{\Sigma_{r\in R+}W(r,s)}{\Sigma_{r\in R-}W(r,s)} 
 \end{equation}
 To demonstrate the performance of this technique on a known trend,
-Figure~\ref{fig:nikolov_eta} shows a plot of an element of R+ ($s+$), along with $\eta$.
+Figure~\ref{fig:nikolov_eta} shows a plot of a single element of R+, 
+along with $\eta$ as calculated for this time series.
 The $\eta$ curve rises dramatically soon after the real spike in the
 data, with the lagtime demonstrating the effect of the data-smoothing.
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/nikolov.png} 
-\caption{Data from a reference time series in $R+$ are plotted in blue, for
+\caption{Data from a simgle reference time series in $R+$ are plotted in blue, for
 2-minute time intervals. Based on a library of 500 reference trends in $R+$
 (minus the one being tested) and 500 reference non-trends in $R-$, the figure of
 merit $\eta$ is calculated for each point and plotted in black. The length of
@@ -480,7 +491,7 @@ of the algorithm by setting parameter values.
 %must choose the time resolution and length of those
 %series. The analyst must also choose an appropriate value for the scaling
 %parameter and define any other transformations applied to the time series. 
-The values chosen for the scaling parameter, the lengths of $s$ and $r$, time series
+The values chosen for the scaling parameter, the lengths of $s$ and $r$, the time series
 precision, and any other transformation parameters lead directly to the
 precision and recall metrics. With the labeled reference series
 in hand, we can easily calculate these metrics by removing a single
@@ -510,7 +521,7 @@ This is a relatively small step up in complexity, and provides a significantly
 decreased rate of false positive signals. 
 
 When optimal coverage and false positive rates are worth extra model complexity
-and technical commitment, we recommend using the data-driven method. While it
+and technical commitment, the data-driven method is worth investigating. While it
 is potentially difficult to collect and label a sufficient number of comparison
 time series, the technique provides stable results across a wide variety of
 trend detection problem. 

@@ -26,8 +26,7 @@ Installation of `pdflatex` and/or additional .sty files may be required.
 # Software
 
 The trend detection software is designed to work easily with 
-the [Gnip-Stream-Collector-Metrics]
-(https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package, 
+the [Gnip-Stream-Collector-Metrics](https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package, 
 configured to read
 from a Gnip PowerTrack stream. However, any time series data can be easily
 transformed into form useable by the scripts in this package. 
@@ -49,8 +48,7 @@ for one rule and one time interval on each line:
 |2015-01-01 00:06:40.0| fedex| 10| 201| 195.0 |
 
 The simplest option for getting data into the correct format is to use
-the [Gnip-Stream-Collector-Metrics]
-(https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package. 
+the [Gnip-Stream-Collector-Metrics](https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package. 
 With this package, you can connect to your Gnip PowerTrack stream, 
 and write out both the raw data and the counts of Tweets matching your rules.
 This mode is configured with the following snippet in the `gnip.cfg` file 
@@ -62,6 +60,7 @@ in Gnip-Stream-Collector-Metrics repo:
 ## Software Components
 
 The work is divided into three basic tasks:
+
 * Bin choice - The original data is filtered for a specific "rule" name, and 
 collected into larger, even-sized bins, sized to the user's wish. 
 This is performed by `trends/rebin.py`. 
