@@ -6,9 +6,10 @@
 \usepackage{siunitx}
 \usepackage{authblk}	% prettier multiple authors
 \usepackage{tikz}
-
 \usepackage[margin=0.75cm]{caption}
 \usepackage{hyperref}
+
+\usepackage{pdfpages}
 
 % see http://texblog.org/2008/05/07/fwd-equal-cell-width-right-and-centre-aligned-content/
 %\newcolumntype{x}[1]{%
@@ -22,7 +23,8 @@
 \affil[]{ \Large{Twitter, Inc.} }
 
 \begin{document}
-\maketitle
+\includepdf[pages={1,2,3}]{WhitePaper_Cover_Backing_Pages.pdf}
+%\maketitle
 
 \frenchspacing
 
