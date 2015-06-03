@@ -23,7 +23,7 @@
 \affil[]{ \Large{Twitter, Inc.} }
 
 \begin{document}
-\includepdf[pages={1,2,3}]{WhitePaper_Cover_Backing_Pages.pdf}
+%\includepdf[pages={1,2,3}]{WhitePaper_Cover_Backing_Pages.pdf}
 %\maketitle
 
 \frenchspacing
@@ -32,33 +32,57 @@
 \section{Introduction}
 \label{intro}
 
-Interactions in social data tell us about the real world, and this view of the world 
-is not limited to snapshots in time. 
-By understanding the time-dependent behavior of groups of social media users, we
-can identify and even predict important real-world trends. 
+User interactions in social data tell us a great deal about the real world, and
+these insights are not limited to any particular segments of time. By
+understanding the time-dependent behavior of groups of social media users, we
+can identify and even predict important real-world trends.
+
+%Interactions in social data tell us about the real world, and this view of the world 
+%is not limited to snapshots in time. 
+%By understanding the time-dependent behavior of groups of social media users, we
+%can identify and even predict important real-world trends. 
 
 What sort of real-world activities, events, and trends might be reflected in
 social data? And what properties of those events might we want to know?
 
-Suppose an influential financial analyst tweets a strong opinion about a stock,
-and the Tweet goes viral. Or suppose a large number of customers take to
-Twitter to complain about a new product. In both cases, a good first question
-is: when did the event happen, or when did the trend start? As a followup, we
-can also ask: how significant is the change? How large is the increase or
-decrease? More importantly, how large is the change relative to typical
-changes? The quantification not only allows an analyst to distinguish the
-atypical from the typical, but it also allows them to compare one atypical
-event to another. Are there characteristics of the atypical events that allow
-them to be separated into groups that can be assigned real-world meaning (e.g.
-seasonal trends, holiday events)? If so, do these assignments point toward a
-particular choice of quantitative model for the event? 
-If the identification of an atypical period of time
-can be quantified, can it be automated? And can it be used to predict future
-behavior?
+Suppose that an influential financial analyst Tweets a strong opinion about a
+particular stock and that Tweet goes viral. Or suppose a large number of
+customers use Twitter to complain about a brand’s new product. In both cases,
+good first questions are: when did the event happen, or when did the trend
+start? As a follow-up, we can also ask: how significant is the change?  How
+large is the increase or decrease? More importantly, how large is this change
+relative to typical changes on Twitter? The quantification not only allows an
+analyst to distinguish the atypical from the typical, but it also allows them
+to compare one atypical event to another. Are there characteristics of atypical
+events that allow them to be separated into groups that can then be assigned
+real-world meaning (e.g. seasonal trends, holiday events)? If so, do these
+assignments point toward a particular choice of quantitative model for the
+event? If the identification of an atypical period of time can be quantified,
+can it be automated? And can it be used to predict future behavior?
 
-After reading this paper, you will be well on your way to building a system to
-discover, measure, compare and discuss changes in time series data that arise
-from online social interactions.
+%Suppose an influential financial analyst Tweets a strong opinion about a stock,
+%and the Tweet goes viral. Or suppose a large number of customers take to
+%Twitter to complain about a new product. In both cases, a good first question
+%is: when did the event happen, or when did the trend start? As a followup, we
+%can also ask: how significant is the change? How large is the increase or
+%decrease? More importantly, how large is the change relative to typical
+%changes? The quantification not only allows an analyst to distinguish the
+%atypical from the typical, but it also allows them to compare one atypical
+%event to another. Are there characteristics of the atypical events that allow
+%them to be separated into groups that can be assigned real-world meaning (e.g.
+%seasonal trends, holiday events)? If so, do these assignments point toward a
+%particular choice of quantitative model for the event? 
+%If the identification of an atypical period of time
+%can be quantified, can it be automated? And can it be used to predict future
+%behavior?
+
+%After reading this paper, you will be well on your way to building a system to
+%discover, measure, compare and discuss changes in time series data that arise
+%from online social interactions.
+
+After reading this paper, you will be well on your way to building a system for
+discovering, measuring, comparing and discussing changes in time series data
+that arise from online social interactions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Trends and Events}  \label{definitions}
@@ -76,7 +100,7 @@ which a count rises from something negligible or unimportant to something
 significant. We are also interesting in structural changes, where a time series
 abruptly shifts from one state to another.
 
-\subsection{Difficulties} Identifying growth, cycles, and especially emerging
+\subsection{Difficulties} Identifying growth, cycles, and -- especially -- emerging
 and structural changes, is hard. Why? A primary difficulty is the fact that we
 often don't know in advance the scale or size of the change. The time interval
 over which a change occurs can range from fractions of seconds to years, a
@@ -84,7 +108,7 @@ difference of 10 orders of magnitude! Additionally, the size of the change can r
 counts of 10s through counts of billions. The community of users generating or
 associated with the change can range from a single person through a group of
 100 million people. It is difficult to construct algorithms that function
-evenly over such broad ranges of data. Finally, we know that change of many
+evenly over such broad ranges of data. Finally, we know that changes of many
 sorts is happening all the time, and we want to take care to identify single,
 rather than composite, changes.
 
@@ -94,16 +118,14 @@ particular topical filter are usually contaiminated by other signals, and
 changes in the data reflect the cumulative result of all underlying effects.
 The size of the data also implies the existence of many atypical patterns that
 are entirely due to statistical variation, rather than reflecting real-world
-events. Yet humans prefer to associate any changes with meaningful and
-nameable events. 
+events. Despite this knowledge, humans prefer to associate any changes with
+meaningful and nameable events. 
 %This is true whether the change is anticipated or not. 
-Even
-the distinction between the “real world” and the online social interactions is
-complicated, and it can be
-difficult to establish causality. Do the social data simply reflect the offline
-world? How do online social interactions affect the rest of the world? 
-The first step in unravelling this tangled feedback network is to 
-qauntify the social data trends.  
+Even the distinction between the “real world” and the online social
+interactions is complicated, and it can be difficult to establish causality. Do
+the social data simply reflect the offline world? How do online social
+interactions affect the rest of the world?  The first step in unravelling this
+tangled feedback network is to quantify the social data trends.  
 
 \subsection{Analysis Trade-offs}
 Attempts to quantify changes in social data are subject to trade-offs. 
@@ -180,7 +202,7 @@ refer to specific, nameable happenings in the either the online or the offline w
 We encourage the reader to systematically think about what sorts of change
 are important to the problem they're trying to solve, and what sorts of
 action are to be taken upon detection. Identifying and characterizing
-atypical behavior in social data time series can be difficult, but it it
+atypical behavior in social data time series can be difficult, but it
 provides us with brand-new insights into group behavior and the interplay
 between the online and the offline world.  
 
@@ -222,21 +244,21 @@ of the precision, the recall, and time-to-detection.
 The Poisson distribution describes the probability of observing a particular
 count of some quantity, when many sources have individually low probabilities
 of contributing to the count. This sounds applicable to the case of counting in
-social data, because each individual has a small chance of tweeting about a
+social data, because each individual has a small chance of Tweeting about a
 given topic, but the large Twitter user base leads to significant counts. We
 can do a rather simple form of trend detection by assuming that the counts in a
 social data time series are Poisson-distributed around some average value, and
 then looking for unlikely counts according to the Poisson model. Consider, for example,
-the number of tweets in some time interval that contain the hashtagged phrase ``\#scotus''
+the number of Tweets in some time interval that contain the hashtagged phrase ``\#scotus''
 (referencing the Supreme Court of the United States).
-If we ignore variations in the overall rate of tweeting, we might expect the
-counts of ``\#scotus''-containing tweets to vary, but the distributions of counts
+If we ignore variations in the overall rate of Tweeting, we might expect the
+counts of ``\#scotus''-containing Tweets to vary, but the distributions of counts
 will generally follow the Poisson distribution,
 \begin{equation}
     P(c_i;\nu) = \nu^{c_i}\cdot e^{-\nu} / c_i!
 \end{equation}
-where $P$ is the probability of observing $c_i$ ``\#scotus'' tweets in the given time
-window, when the expected number of such tweets is $\nu$. While we have no way of
+where $P$ is the probability of observing $c_i$ ``\#scotus'' Tweets in the given time
+window, when the expected number of such Tweets is $\nu$. While we have no way of
 knowing the true value of $\nu$, a good source is the time interval \textit{previous} to the
 one being tested, $c_{i-1}$. We identify trends by counts $c_i$ that are particularly
 unlikely, given the previous count, $c_{i-1}$, and the assumption of Poisson
@@ -328,8 +350,8 @@ to interpret.
 
 Most social data time series exhibit cyclic patterns that reflect genuine human
 cycles of activity. For example, if the majority of users that generate a
-particular body of tweets live in a narrow band of time zones, we would
-naturally expect to see fewer tweets during night hours for those time zones.
+particular body of Tweets live in a narrow band of time zones, we would
+naturally expect to see fewer Tweets during night hours for those time zones.
 Thus, the patterns of hours, days, weeks, and even months can be reflected in
 changes in rates of social media use. 
 
@@ -338,7 +360,7 @@ activity, the cycle-corrected Poisson model builds on the foundation of the
 point-by-point Poisson model, and uses a background model derived from data
 similar to the point being tested. For example, if a data point represents 3
 hours of data from a Friday night in the Eastern US, it would not make a good
-model to use the previous three hours as the Poisson mean. People tweet about
+model to use the previous three hours as the Poisson mean. People Tweet about
 different topics at 2-5PM than they do at 5-8PM, leading to topical time series
 with large variations simply due to the progression of the day. A better
 background model for the data from 5-8PM on a particular Friday is an average
