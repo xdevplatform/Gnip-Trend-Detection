@@ -67,7 +67,6 @@ class WeightedDataTemplates(object):
         # add current data to series and get appropriately-sized sub-series
         self.total_series.append(current_count)
         current_series =  self.total_series[-self.series_length:-1]
-        #print(current_series)
         # don't return anything meaningful until total_series is long enough
         if len(self.total_series) < self.series_length:
             self.trend_weight = float(0)

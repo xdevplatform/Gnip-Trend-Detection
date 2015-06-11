@@ -19,10 +19,19 @@ class Library(object):
 
     def __init__(self, **kwargs):
         """
-        set up internal lists
+        set up internal lists, get parameter values, 
+        and set up transformation functions
         """
         self.trends = []
         self.non_trends = []
+        
+        self.config = {}
+        # default values
+        self.config["reference_length"] = 100
+        self.config["n_smooth"] = 4
+        self.config["alpha"] = 1.2
+        # add values passed into ctor
+        self.config.update(kwargs["config"])
 
         self.set_up_transformations(kwargs)
 
@@ -72,13 +81,6 @@ class Library(object):
         self.test_transformations.append(unit_normalization)
         self.test_transformations.append(logarithmic_scaling)
         
-        self.config = {}
-        self.config["reference_length"] = 100
-        self.config["n_smooth"] = 4
-        self.config["alpha"] = 1.2
-
-        self.config.update(config)
-
     def combine(self, lib):
         """
         Manage all attributes of class that are important for combinations. 
@@ -134,6 +136,12 @@ def logarithmic_scaling(series, config):
     return new_series
 
 def sizing(series, config):
+    """
+    Apply to reference series ONLY!
+
+    For trends, keep "reference_length" points before max value
+    For non-trends, keep random subset of length "reference length"
+    """
     size_r = int(config["reference_length"])
     
     if bool(config["is_trend"]):
