@@ -27,8 +27,8 @@ class Library(object):
         
         self.config = {}
         # default values
-        self.config["reference_length"] = 100
-        self.config["n_smooth"] = 4
+        self.config["reference_length"] = 210
+        self.config["n_smooth"] = 80
         self.config["alpha"] = 1.2
         # add values passed into ctor
         self.config.update(kwargs["config"])
@@ -73,7 +73,9 @@ class Library(object):
         self.transformations.append(smoothing)
         self.transformations.append(unit_normalization)
         self.transformations.append(logarithmic_scaling)
-        self.transformations.append(sizing)
+        ## sizing applied previous to insertion
+        #self.transformations.append(sizing)
+        
         # transformations to be run on test series
         self.test_transformations = []
         self.test_transformations.append(spike_normalization)
