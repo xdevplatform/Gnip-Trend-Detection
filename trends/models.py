@@ -2,6 +2,7 @@ import collections
 import sys
 import pickle
 import math
+import logging
 
 import scipy.stats.distributions as dists
 
@@ -46,11 +47,17 @@ class WeightedDataTemplates(object):
         else:
             self.Lambda = 1
 
+        if "logger" in config:
+            self.logger = config["logger"]
+        else:
+            #self.logger = logging.getLogger("default_template_logger")
+            pass
+
         from library import Library
         if "library_file_name" in config:
             self.library = pickle.load(open(config["library_file_name"]))
         else:
-            self.library = Library()
+            self.library = Library(config={})
 
     def update(self, **kwargs):
         """
@@ -74,20 +81,20 @@ class WeightedDataTemplates(object):
             return
 
         # transform the test series just like the reference series
-        current_series = self.library.transform_input(current_series,is_test_series=True)
+        current_series = self.library.transform_input(current_series)
         #print(current_series) 
         self.trend_weight = float(0)
         for reference_series in self.library.trends:  
             #print reference_series
             weight = self.weight(reference_series,current_series,check_for_self) 
-            #print("trend wt: {}".format(weight))
+            #self.logger.debug("trend wt: {}".format(weight))
             self.trend_weight += weight
         
         self.non_trend_weight = float(0)
         for reference_series in self.library.non_trends: 
             #print reference_series
             weight = self.weight(reference_series,current_series,check_for_self)
-            #print("non trend wt: {}".format(weight))
+            #self.logger.debug("non trend wt: {}".format(weight))
             self.non_trend_weight += weight
 
     def get_result(self):
@@ -116,30 +123,34 @@ class WeightedDataTemplates(object):
         min_distance = sys.float_info.max
         for sub_series in reference_series.get_subseries(self.series_length):
             d = getattr(self.distance_measures,self.distance_measure_name)(sub_series,test_series)  
-            #print("Distance: {}".format(d))
+            #self.logger.debug("Distance: {}".format(d))
             if d < min_distance:
                 min_distance = d
-        #print("min d: {}".format(min_distance))
+        #self.logger.debug("min d: {}".format(min_distance))
         return math.exp(-float(min_distance) * self.Lambda )
 
     def set_up_distance_measures(self, config): 
         """
-        Define and instantiate helper class for distance measures.
+        Instantiate helper class for distance measures.
         """
         if "distance_measure_name" in config:
             self.distance_measure_name = config["distance_measure_name"]
         else:
             self.distance_measure_name = "euclidean"
 
-        class DistanceMeasures(object):
-            def __init__(self):
-                pass
-            def euclidean(self,a,b):
-                sum = 0
-                for ai,bi in zip(a,b):
-                    sum += abs(ai - bi)
-                return sum
         self.distance_measures = DistanceMeasures()
+
+class DistanceMeasures(object):
+    """
+    Helper class for distance measures.
+    """
+    def __init__(self):
+        pass
+    def euclidean(self,a,b):
+        sum = 0
+        for ai,bi in zip(a,b):
+            sum += abs(ai - bi)
+        return sum
 
 class Poisson(object):
     """

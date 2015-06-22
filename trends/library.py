@@ -47,17 +47,13 @@ class Library(object):
         else:
             self.non_trends.append( TopicSeries(series) )
 
-    def transform_input(self,series,is_test_series=False):
+    def transform_input(self,series):
         """
         Run series sequentially through the functions 
         in the transformations list
         """
-        if is_test_series:
-            transformations = self.test_transformations
-        else:
-            transformations = self.transformations
 
-        for transformation in transformations:
+        for transformation in self.transformations:
             series = transformation(series,self.config)
 
         return series
@@ -73,15 +69,6 @@ class Library(object):
         self.transformations.append(smoothing)
         self.transformations.append(unit_normalization)
         self.transformations.append(logarithmic_scaling)
-        ## sizing applied previous to insertion
-        #self.transformations.append(sizing)
-        
-        # transformations to be run on test series
-        self.test_transformations = []
-        self.test_transformations.append(spike_normalization)
-        self.test_transformations.append(smoothing)
-        self.test_transformations.append(unit_normalization)
-        self.test_transformations.append(logarithmic_scaling)
         
     def combine(self, lib):
         """
