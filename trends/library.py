@@ -10,6 +10,9 @@ class TopicSeries(list):
     all subsets of a particular length
     """
     def get_subseries(self,length):
+        """ Generator that returns all sub-lists of self 
+        that are length "length"
+        """
         index = 0
         while index + length <= len(self):
             yield self[index:index+length]
@@ -33,43 +36,54 @@ class Library(object):
         # add values passed into ctor
         self.config.update(kwargs["config"])
 
-        self.set_up_transformations(kwargs)
-
-    def add_series(self,series,is_trend=True):
+        # Transformation functions are defined globally and added here to list.
+        
+        # transformations to be run on reference series
+        self.transformations = []
+        self.transformations.append(add_one)
+        self.transformations.append(unit_normalization)
+        #self.transformations.append(spike_normalization)
+        self.transformations.append(logarithmic_scaling)
+        self.transformations.append(smoothing)
+        #self.transformations.append(slow_smoothing)
+        #self.transformations.append(index_smoothing)
+        self.transformations.append(sizing)
+        
+        # transformations to be run on test series 
+        self.test_transformations = []
+        self.test_transformations.append(add_one)
+        self.test_transformations.append(unit_normalization)
+        #self.test_transformations.append(spike_normalization)
+        self.test_transformations.append(logarithmic_scaling)
+        self.test_transformations.append(smoothing)
+       
+    def add_reference_series(self,series,is_trend=True):
         """
-        add a time series to the internal lists,
+        add a reference time series to the internal lists,
         after transforming it 
         """
         self.config["is_trend"] = is_trend
-        series = self.transform_input(series)
+        series = self.transform_input(series,is_test_series=False) 
         if is_trend:
             self.trends.append( TopicSeries(series) )
         else:
             self.non_trends.append( TopicSeries(series) )
 
-    def transform_input(self,series):
+    def transform_input(self,series,is_test_series):
         """
         Run series sequentially through the functions 
         in the transformations list
         """
 
-        for transformation in self.transformations:
+        transformations = self.transformations
+        if is_test_series:
+            transformations = self.test_transformations
+        
+        for transformation in transformations:
             series = transformation(series,self.config)
 
         return series
 
-    def set_up_transformations(self, config):
-        """
-        Convenience method to be called in ctor.
-        Transformation functions are defined globally and added here to list.
-        """
-        # transformations to be run on reference series
-        self.transformations = []
-        self.transformations.append(spike_normalization)
-        self.transformations.append(smoothing)
-        self.transformations.append(unit_normalization)
-        self.transformations.append(logarithmic_scaling)
-        
     def combine(self, lib):
         """
         Manage all attributes of class that are important for combinations. 
@@ -83,11 +97,27 @@ class Library(object):
             assert self.non_trends == []
             self.non_trends = lib.non_trends
 
+def add_one(series, config):
+    """ Add a count of 1 to every count in the series """
+    return [ ct+1 for ct in series ]
+
 def unit_normalization(series, config):
-    size = len(series)
+    """ Do unit normalization based on "reference_length" number of bins
+    at the end of the series"""
+    reference_length = int(config["reference_length"])
+    SMALL_NUMBER = 0.00001
+    offset = int(config["baseline_offset"])
+    lower_idx = -(int(config["reference_length"]) + offset)
+    upper_idx = -offset
+    total = sum(series[lower_idx:upper_idx])/float(reference_length)
+    #print(total)
+    #total = sum(series[-reference_length:])/float(reference_length)
+    if total == 0:
+        total = SMALL_NUMBER
     new_series = []
     for pt in series:
-        new_series.append(float(pt)/size)
+        new_series.append(float(pt)/total)
+    #print(sum(new_series[-int(config["reference_length"])+offset:]))
     return new_series
 
 def spike_normalization(series, config):
@@ -104,49 +134,51 @@ def spike_normalization(series, config):
     return new_series
 
 def smoothing(series,config): 
-    N_smooth = int(config["n_smooth"])
+    n_smooth = int(config["n_smooth"])
     queue = collections.deque()
     new_series = []
     for pt in series:
         queue.append(pt)
-        if len(queue) > N_smooth:
+        if len(queue) >= n_smooth:
             queue.popleft()
-        new_series.append( sum(queue) )
+        new_series.append( float(sum(queue))/len(queue) )
+    return new_series
+
+def slow_smoothing(series,config): 
+    n_smooth = int(config["n_smooth"])
+    queue = []
+    new_series = []
+    for pt in series:
+        queue.append(pt)
+        if len(queue) >= n_smooth:
+            del queue[0]
+        new_series.append( float(sum(queue))/len(queue) )
+    return new_series
+
+def index_smoothing(series,config): 
+    n_smooth = int(config["n_smooth"])
+    new_series = []
+    idx = 1
+    while idx < len(series):
+        lower_idx = max(0,idx-n_smooth)
+        sub_series = series[lower_idx:idx]
+        new_series.append( float(sum(sub_series))/len(sub_series) )
+        idx+=1
+
     return new_series
 
 def logarithmic_scaling(series, config): 
     new_series = []
-    series_min = min(series)
+    
     for pt in series:
-        #if pt <= 0:
-        #    pt = 0.00001
-        #new_series.append(math.log10(pt)) 
-        new_series.append(math.log10(pt + 1))
+        if pt <= 0:
+            pt = 0.00001
+        new_series.append(math.log10(pt))
     return new_series
 
-def sizing(series, config):
-    """
-    Apply to reference series ONLY!
-
-    For trends, keep "reference_length" points before max value
-    For non-trends, keep random subset of length "reference length"
-    """
-    size_r = int(config["reference_length"])
-    
-    if bool(config["is_trend"]):
-        max_idx = None
-        max_pt = -5000
-        idx = 0
-        for pt in series:
-            if pt > max_pt:
-                max_idx = idx
-                max_pt = pt
-            idx += 1
-        return series[max_idx - size_r:max_idx]
-    else:
-        random.seed()
-        index = random.randint(0,len(series)-size_r) 
-        return series[index:index+size_r]
+def sizing(series, config): 
+    new_series = series[-int(config["reference_length"]):]
+    return new_series
 
 def save_library(library, file_name):
     pickle.dump(library,open(file_name,"w"))
@@ -181,6 +213,6 @@ if __name__ == "__main__":
         series.append(ct)
 
     lib = Library()
-    lib.add_series(series,trend = args.is_trend)
+    lib.add_reference_series(series,trend = args.is_trend)
     merge_library(lib,args.lib_file_name)
     save_library(lib,args.lib_file_name)

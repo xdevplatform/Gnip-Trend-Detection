@@ -42,6 +42,11 @@ class WeightedDataTemplates(object):
         else:
             self.series_length = 50
 
+        if "reference_length" in config:
+            self.reference_length = int(config["reference_length"])
+        else:
+            self.reference_length = 210
+
         if "lambda" in config:
             self.Lambda = float(config["lambda"])
         else:
@@ -50,8 +55,7 @@ class WeightedDataTemplates(object):
         if "logger" in config:
             self.logger = config["logger"]
         else:
-            #self.logger = logging.getLogger("default_template_logger")
-            pass
+            self.logger = logging.getLogger("default_template_logger")
 
         from library import Library
         if "library_file_name" in config:
@@ -71,30 +75,39 @@ class WeightedDataTemplates(object):
         if "check_for_self" in kwargs:
             check_for_self = kwargs["check_for_self"]
            
-        # add current data to series and get appropriately-sized sub-series
+        # add current data point to series 
         self.total_series.append(current_count)
-        current_series =  self.total_series[-self.series_length:-1]
+
         # don't return anything meaningful until total_series is long enough
-        if len(self.total_series) < self.series_length:
+        if len(self.total_series) < self.reference_length or sum(self.total_series) == 0: 
             self.trend_weight = float(0)
             self.non_trend_weight = float(0)
             return
 
-        # transform the test series just like the reference series
-        current_series = self.library.transform_input(current_series)
-        #print(current_series) 
+
+        #reference_sized_test_series = self.total_series[-self.reference_length:]
+        ## transform the test series
+        #transformed_series = self.library.transform_input(reference_sized_test_series,is_test_series=True)
+        ## get correctly-sized test series
+        #test_series =  transformed_series[-self.series_length:]
+
+        ## transform a reference_legth sub-series
+        transformed_series = self.library.transform_input(self.total_series[-self.reference_length:],is_test_series=True)
+        ## get correctly-sized test series
+        test_series =  transformed_series[-self.series_length:]
+
         self.trend_weight = float(0)
         for reference_series in self.library.trends:  
             #print reference_series
-            weight = self.weight(reference_series,current_series,check_for_self) 
-            #self.logger.debug("trend wt: {}".format(weight))
+            weight = self.weight(reference_series,test_series,check_for_self) 
+            self.logger.debug("trend wt: {}".format(weight))
             self.trend_weight += weight
         
         self.non_trend_weight = float(0)
         for reference_series in self.library.non_trends: 
             #print reference_series
-            weight = self.weight(reference_series,current_series,check_for_self)
-            #self.logger.debug("non trend wt: {}".format(weight))
+            weight = self.weight(reference_series,test_series,check_for_self)
+            self.logger.debug("non trend wt: {}".format(weight))
             self.non_trend_weight += weight
 
     def get_result(self):
@@ -117,7 +130,7 @@ class WeightedDataTemplates(object):
         # account for case when reference_series in library is used as the test_series 
         if check_for_self:
             if reference_series == test_series: 
-                print("found self in library!")
+                #self.logger.debug("found self in library!")
                 return 0
 
         min_distance = sys.float_info.max
@@ -126,7 +139,7 @@ class WeightedDataTemplates(object):
             #self.logger.debug("Distance: {}".format(d))
             if d < min_distance:
                 min_distance = d
-        #self.logger.debug("min d: {}".format(min_distance))
+        self.logger.debug("min d: {}".format(min_distance))
         return math.exp(-float(min_distance) * self.Lambda )
 
     def set_up_distance_measures(self, config): 
