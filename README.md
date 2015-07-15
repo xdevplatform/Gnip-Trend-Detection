@@ -91,25 +91,54 @@ and the trend detection technique and parameter values.
 The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
 Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
 
-`python trends/rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
+`./trends/rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data.
 
 Next, we will run the analysis script, which when run alone, should return nothing.
 Remember, all the modeling specification is in the config file.
 
-`python trends/analyze.py -i example/scotus.pkl -c example/config.cfg`
+`./trends/analyze.py -i example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data, including the results for "eta". 
 
 To view results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
 
-`python trends/plot.py -i example/scotus.pkl -c example/config.cfg` 
+`./trends/plot.py -i example/scotus.pkl -c example/config.cfg` 
 
 The output PNG should be in the example directory and look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus.png?raw=true) 
+
+This analysis is based on the point-by-point Poisson model, with the previous point 
+as the background expectation. You must still choose the cutoff value of `eta` (often called `theta`)
+that defines the presence of a trend. It is clear that any choice for data will lead to
+lots of false positive signals.
+
+A more robust background model can be used by changing the `mode` parameter in the `Poisson_model`
+section of the `example/config.cfg` from `lc` (last count) to `a` (average). The `period_list`
+parameter determines over which time interval the average is taken.  
+
+The output PNG should for this model should look like:
+
+![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_averaged.png?raw=true) 
+
+There is much less noise in this results, but we can do better. Choose the data-derived template method
+in `example/config.cfg`: `model_name=WeightedDataTemplates`. In this model, `eta` quantifies the
+extent to which the test series looks more like a set of known trending time series or like a set of
+time series known _not_ to be trending. 
+
+The output PNG should for this model should look like:
+
+![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_data.png?raw=true) 
+
+In this result, there is virtually no noise, but the `eta` curve lags the data because of the data
+smoothing procedure. Nevertheless, this model provides the most robust performance, at the cost
+of additional complexity and CPU time. The ROC curve for this model looks like:
+
+![roc](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/roc.png?raw=true)  
+
 
 ## Analysis Model Details
 
