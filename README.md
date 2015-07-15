@@ -8,9 +8,9 @@ defined by the presence of a word, a phrase, a hashtags, a mention, or any
 other characteristic of a social media event that can be counted over a
 series of time intervals. To do trend detection, we quantify 
 the degree to which each count in the time series is atypical. We refer to
-this figure of merit with the Greek letter "eta", and we say that a 
+this figure of merit with the Greek letter *eta*, and we say that a 
 time series and its associated topic are "trending" if the figure of merit
-exceeds a pre-defined threshold.
+exceeds a pre-defined threshold denoted by the Greek letter *theta*. 
 
 # Whitepaper
 
@@ -66,12 +66,8 @@ collected into larger, even-sized bins, sized to the user's wish.
 This is performed by `trends/rebin.py`. 
 * Analysis - Each data point is analyzed according to a model implemented in
 the `trends/models.py` file. Models return a figure-of-merit for each point.
-* Plotting - The original time series is plotted and overlaid with a plot of the eta values. 
+* Plotting - The original time series is plotted and overlaid with a plot of the *eta* values. 
 This is performed by `trends/plot.py`. 
-
-There is a wrapper script, `trends/analyze_all_rules.py`, that runs the rebin process
-in parallel over a list of rules. The data are analyzed and plotted, 
-and a list of the top rules
 
 ## Configuration
 
@@ -100,7 +96,7 @@ Remember, all the modeling specification is in the config file.
 
 `./trends/analyze.py -i example/scotus.pkl -c example/config.cfg`
 
-Use the `-v` option to see the raw data, including the results for "eta". 
+Use the `-v` option to see the raw data, including the results for *eta*. 
 
 To view results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
@@ -112,20 +108,20 @@ The output PNG should be in the example directory and look like:
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus.png?raw=true) 
 
 This analysis is based on the point-by-point Poisson model, with the previous point 
-as the background expectation. You must still choose the cutoff value of `eta` (often called `theta`)
-that defines the presence of a trend. It is clear that any choice for data will lead to
+as the background expectation. You must still choose the cutoff value of *eta* (called *theta*)
+that defines the presence of a trend. It is clear that any choice for *theta* will lead to
 lots of false positive signals.
 
 A more robust background model can be used by changing the `mode` parameter in the `Poisson_model`
 section of the `example/config.cfg` from `lc` (last count) to `a` (average). The `period_list`
-parameter determines over which time interval the average is taken.  
+parameter determines the time interval over which the average is taken.  
 
 The output PNG should for this model should look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_averaged.png?raw=true) 
 
 There is much less noise in this results, but we can do better. Choose the data-derived template method
-in `example/config.cfg`: `model_name=WeightedDataTemplates`. In this model, `eta` quantifies the
+in `example/config.cfg` by uncommenting `model_name=WeightedDataTemplates`. In this model, *eta* quantifies the
 extent to which the test series looks more like a set of known trending time series or like a set of
 time series known _not_ to be trending. 
 
@@ -133,7 +129,7 @@ The output PNG should for this model should look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_data.png?raw=true) 
 
-In this result, there is virtually no noise, but the `eta` curve lags the data because of the data
+In this result, there is virtually no noise, but the *eta* curve lags the data because of the data
 smoothing procedure. Nevertheless, this model provides the most robust performance, at the cost
 of additional complexity and CPU time. The ROC curve for this model looks like:
 
