@@ -84,6 +84,12 @@ This file is `example/scotus.txt`. In the same directory, there is a configurati
 which specifies what the software will do, including the size of the final time buckets 
 and the trend detection technique and parameter values.
 
+NOTE: be sure that your current directory is in your Python path. For example, run:
+
+``export PYTHONPATH=`pwd` `` 
+
+from the repository directory.
+
 The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
 Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
 

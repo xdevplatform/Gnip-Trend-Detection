@@ -11,7 +11,7 @@ model_name=Poisson
 #model_name=WeightedDataTemplates
 
 [plot]
-plot_title=#scotus
+plot_title=scotus.png
 plot_dir=.
 
 
@@ -23,18 +23,31 @@ mode=lc
 # "averaged mode": Poisson mean taken from average over similiar periods,
 # as specified by "period_list" parameter
 #mode=a  
-# list of attributes of TimeBucket.start_time to use for period identification
+# When using mode=a, period_list must be a comma-separated list of 
+# Python datetime type attributes.
+# Counts will be averaged over time intervals with the same value(s)
+# for this attribute or combination of attributes.
 period_list=hour
-# for dtermining Poisson confidence intervals
+# Poisson confidence interval parameter
 alpha=0.99
 
-[WeightedDataTemplates_model] 
+[WeightedDataTemplates_model]
+## NOTE: these parameters must match those used to generate the library
 # length of subset of test series to compare to reference series
-series_length=40                  
+series_length = 150
+# reference library series length
+reference_length = 150
 # distance parameter for weights
-lambda=1                          
+lambda = 0.1
 # pickle file containing the Library instance to be used
-library_file_name=my_library.pkl  
+library_file_name = example/library.pkl
+# smoothing parameter
+n_smooth = 20
 # only 'euclidean' is implemented
-distance_measure_name=euclidean   
+distance_measure_name = euclidean
+baseline_offset = 40
+rebin_factor = 2
+num_iterations = 5
+num_test_sets = 100
+num_ref_sets = 500
 
