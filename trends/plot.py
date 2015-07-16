@@ -52,9 +52,8 @@ def plot(plotable_data,config):
         tl.set_fontsize(10)
     fig.autofmt_xdate()
   
-    plt.savefig(config["plot_dir"] + "/{}".format(config["plot_title"]),dpi=400) 
+    plt.savefig(config["plot_dir"] + "/{}.{}".format(config["plot_title"],config["plot_extension"]),dpi=400) 
 
-    return 0
 
 if __name__ == "__main__":
     
