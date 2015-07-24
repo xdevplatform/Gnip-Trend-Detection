@@ -95,7 +95,7 @@ if args.do_rebin:
                 args.input_file_names.append(os.path.join(root,fname))
 
     if args.input_file_names is None:
-        sys.stderr.write("Input file(s) must be specified. Exiting.")
+        sys.stderr.write("Input file(s) must be specified. Exiting.\n")
         sys.exit(1)
     
     # results from the distributed processes are returned to this queue
@@ -179,9 +179,9 @@ if args.do_analysis:
         plotable_data = analyzer(rule_data,model,logr) 
         # remove spaces in rule name
         rule_name = rule.replace(" ","-")[0:100]
-
+        plot_config["plot_title"] = rule_name
         if args.do_plot:
-            return_val = plotter(plotable_data,rule_name) 
+            return_val = plotter(plotable_data,plot_config) 
             # the plotter returns -1 if the counts data don't exist
             if return_val == -1:
                 continue
