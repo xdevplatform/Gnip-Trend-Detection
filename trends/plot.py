@@ -35,7 +35,7 @@ def plot(plotable_data,config):
     import matplotlib.dates as mdates
     ax1.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
     plt.locator_params(axis = 'y', nbins = 4)
-    ax1.set_xlabel("time (hours)")
+    ax1.set_xlabel("time ({} bins)".format(config["x_unit"]))
 
     ax2 = ax1.twinx()
     if use_x_var:
@@ -52,9 +52,8 @@ def plot(plotable_data,config):
         tl.set_fontsize(10)
     fig.autofmt_xdate()
   
-    plt.savefig(config["plot_dir"] + "/{}".format(config["plot_title"]),dpi=400) 
+    plt.savefig(config["plot_dir"] + "/{}.{}".format(config["plot_title"],config["plot_extension"]),dpi=400) 
 
-    return 0
 
 if __name__ == "__main__":
     
@@ -91,6 +90,8 @@ if __name__ == "__main__":
         else:
             plot_config["plot_title"] = "output"
             plot_config["plot_dir"] = "."
+        rebin_config = dict(config.items("rebin"))
+        plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
     else:
         model_config = {"alpha":0.99,"mode":"lc"}
         model_name = "Poisson"

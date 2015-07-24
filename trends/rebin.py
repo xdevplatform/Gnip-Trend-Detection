@@ -31,13 +31,16 @@ import pickle
 import logging
 import fnmatch
 import os
+import traceback
 
 import models
 from time_bucket import TimeBucket
 
 # timestamps read from files are expected in this format
 #EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+#EXPLICIT_DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
+#EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M"
 # keyword arguments start/stop time are expected in this format
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
@@ -87,6 +90,7 @@ def rebin(**kwargs):
                 if line_split[1].strip().rstrip() != kwargs["rule_name"].strip().rstrip(): 
                     continue
                 else:
+                    logr.debug("{}".format(line))
                     this_stop_time = datetime.datetime.strptime(line_split[0],EXPLICIT_DATETIME_FORMAT)  
                     if this_stop_time > stop_time:
                         continue
@@ -114,21 +118,26 @@ def rebin(**kwargs):
         # make list of TimeBuckets for bins
         grid = []
         while tb.stop_time <= stop_time:
+            logr.debug("{}".format(tb))
             grid.append(tb)
             tb_start_time = tb.stop_time
             tb_stop_time = tb_start_time + datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])})
             tb = TimeBucket(tb_start_time,tb_stop_time) 
         grid.append(tb)
 
+        logr.debug("Finished generating grid for {}".format(kwargs["rule_name"]))
+
         # add data to a dictionary with indicies mapped to the grid indicies
         final_data = collections.defaultdict(int)
         for orig_tb,orig_count in data_sorted:
+            logr.debug("orig. TB: {}".format(orig_tb))
             for grid_tb in grid:
-                idx = grid.index(grid_tb) 
                 if orig_tb in grid_tb:
+                    idx = grid.index(grid_tb) 
                     final_data[idx] += int(orig_count)
                     break
                 elif orig_tb.intersects(grid_tb):
+                    idx = grid.index(grid_tb) 
                     frac = orig_tb.get_fraction_overlapped_by(grid_tb) 
                     final_data[idx] += int(int(orig_count) * frac)
                     # decide where to put the remainder of this orig_count
@@ -167,9 +176,11 @@ def rebin(**kwargs):
         else:
         # return the data structure
             return final_sorted_data_tuples
+    except ValueError, e:
+        logr.error(traceback.print_exc())
 
     except Exception, e:
-        logr.error(e)
+        logr.error(traceback.print_exc())
 
 if __name__ == "__main__":
    
