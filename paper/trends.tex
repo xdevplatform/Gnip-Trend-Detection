@@ -114,7 +114,7 @@ rather than composite, changes.
 
 The corpus of social data is enormous, and this size brings about other
 difficulties. Most signals of interest are relatively small.  Data that match a
-particular topical filter are usually contaiminated by other signals, and
+particular topical filter are usually contaminated by other signals, and
 changes in the data reflect the cumulative result of all underlying effects.
 The size of the data also implies the existence of many atypical patterns that
 are entirely due to statistical variation, rather than reflecting real-world
@@ -124,7 +124,7 @@ meaningful and nameable events.
 Even the distinction between the “real world” and the online social
 interactions is complicated, and it can be difficult to establish causality. Do
 the social data simply reflect the offline world? How do online social
-interactions affect the rest of the world?  The first step in unravelling this
+interactions affect the rest of the world?  The first step in unraveling this
 tangled feedback network is to quantify the social data trends.  
 
 \subsection{Analysis Trade-offs}
@@ -138,6 +138,8 @@ Second is the \textit{precision}, or the fraction of identified trends
 that are not statistical flukes. 
 Last is the \textit{recall}, or the fraction of real trends that are identified
 by the trend detection scheme.
+Two metrics similar to precision and recall are the \textit{true positive rate}
+and the \textit{false positive rate}.
 These performance metrics can not be simultaneously optimized.
 For example, if we wish to quickly identify an
 emerging change, and we wish to do so with high confidence that we’re not
@@ -162,7 +164,7 @@ following forms:
 
 Given these challenges and considerations, let’s organize the analysis around
 three classes of anomalies, as seen in Figure~\ref{fig:anomalies}. While
-anomolous decreases in time series can be interesting, we will limit ourselves
+anomalous decreases in time series can be interesting, we will limit ourselves
 for the duration of the paper to the specific case of atypical increases.
 
 \textbf{Ramp-up}: from a well-understood steady state (negligible, constant, or
@@ -226,7 +228,7 @@ In other techniques, the model includes both a background component and
 and trend-like component. In these cases, the $\eta$ value quantifies the 
 extent to which the data look more like a trend than a non-trend. 
 Whatever the model, we say that the topic is trending at the time the
-$\eta$ exceeds a pre-determined value. 
+$\eta$ exceeds a predetermined value. 
 
 To calculate $\eta$, we typically must choose some model parameter values. 
 If we have access to historical data that is labeled with truth 
@@ -468,16 +470,16 @@ To demonstrate the performance of this technique on a known trend,
 Figure~\ref{fig:nikolov_eta} shows a plot of a single element of R+, 
 along with $\eta$ as calculated for this time series.
 The $\eta$ curve rises dramatically soon after the real spike in the
-data, with the lagtime demonstrating the effect of the data-smoothing.
+data, with the lag time demonstrating the effect of the data-smoothing.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.95\textwidth]{fig/nikolov.png} 
-\caption{Data from a simgle reference time series in $R+$ are plotted in blue, for
+\includegraphics[width=0.95\textwidth]{fig/nikolov_trend.pdf} 
+\caption{Data from a single reference time series in $R+$ are plotted in black, for
 2-minute time intervals. Based on a library of 500 reference trends in $R+$
 (minus the one being tested) and 500 reference non-trends in $R-$, the figure of
-merit $\eta$ is calculated for each point and plotted in black. The length of
-elements of $R$ is 200 minutes, while the length of the tested series ($s$) is 100
+merit $\eta$ is calculated for each point and plotted in red. The length of
+elements of $R$ is 200 minutes, while the length of the testing sub-series ($s$) is 100
 minutes. 
 %For distance calculations, the data are smoothed over a 40 minute window.
 }
@@ -516,10 +518,33 @@ of the algorithm by setting parameter values.
 %series. The analyst must also choose an appropriate value for the scaling
 %parameter and define any other transformations applied to the time series. 
 The values chosen for the scaling parameter, the lengths of $s$ and $r$, the time series
-precision, and any other transformation parameters lead directly to the
-precision and recall metrics. With the labeled reference series
-in hand, we can easily calculate these metrics by removing a single
-element from $R+$ or $R-$ and testing it against the ensemble. 
+precision, and any other transformation parameters lead directly to the true-positive
+and false-positive metrics. With the labeled reference series
+in hand, we can easily calculate these metrics by removing random test sets of 
+elements from $R+$ or $R-$ and running these series through the analysis.
+
+We have conducted a performance analysis by fixing all parameters except for $\theta$,
+the critical value of $\eta$ that defines our split between trends and non-trends.
+We produce time series of $\eta$ values for a set of 100 known trending time series and 100 known
+non-trending time series, all independent from the 500 trending and 500 non-trending 
+time series used as references series ($R$). By applying variations in $\theta$ 
+to the $\eta$ values from the test series, we can trace out a curve in
+the true-positive rate (TPR) / false-positive rate (FPR) space: the Receiver Operating
+Characteristic (ROC) curve. This curve is shown in two forms in Figure~\ref{fig:roc},
+and represents the quality of the classification. The large area under the ROC curve
+indicates that this technique, with an appropriate set of parameter values,
+can simultaneously provide high TRP and low FPR.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\textwidth]{fig/roc.pdf} 
+\caption{A plot of the Receiver Operating Characteristic curve for variations 
+in $\theta$ and a particular set of algorithm parameters. To highlight the
+details, the right figure plots the logarithm of the true-negative rate, 
+instead of the true positive rate.}
+\label{fig:roc}
+\end{center}
+\end{figure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -544,7 +569,7 @@ to account for cyclic behavior, as in the cycle-corrected Poisson technique.
 This is a relatively small step up in complexity, and provides a significantly
 decreased rate of false positive signals. 
 
-When optimal coverage and false positive rates are worth extra model complexity
+When optimal true- and false-positive rates are worth extra model complexity
 and technical commitment, the data-driven method is worth investigating. While it
 is potentially difficult to collect and label a sufficient number of comparison
 time series, the technique provides stable results across a wide variety of
