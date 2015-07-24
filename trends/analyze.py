@@ -35,6 +35,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
+    parser.add_argument("-d",dest="analyzed_data_file",default=None) 
     parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
     parser.add_argument("-v",dest="verbose",action="store_true",default=False)
     args = parser.parse_args()
@@ -53,5 +54,7 @@ if __name__ == "__main__":
 
     model = getattr(models,model_name)(config=model_config) 
     generator = pickle.load(open(args.input_file_name))
-    analyze(generator,model,logr)
+    plotable_data = analyze(generator,model,logr)
+    if args.analyzed_data_file is not None:
+        pickle.dump(plotable_data,open(args.analyzed_data_file,"w"))
 

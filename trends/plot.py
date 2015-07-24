@@ -77,6 +77,8 @@ if __name__ == "__main__":
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
     parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
     parser.add_argument("-t",dest="plot_title",default=None) 
+    parser.add_argument("-d",dest="analyzed_data_file",default=None) 
+    parser.add_argument("-v",dest="verbose",action="store_true",default=False) 
     args = parser.parse_args()
 
     plot_config = {}
@@ -100,8 +102,14 @@ if __name__ == "__main__":
    
     if args.plot_title is not None:
         plot_config["plot_title"] = args.plot_title
+    if args.verbose is True:
+        logr.setLevel(logging.DEBUG)
 
     model = getattr(models,model_name)(config=model_config) 
     generator = pickle.load(open(args.input_file_name))
-    plotable_data = analyzer(generator,model,logr)  
+    if args.analyzed_data_file is not None:
+        plotable_data = pickle.load(open(args.analyzed_data_file))
+    else:
+        plotable_data = analyzer(generator,model,logr)
+    
     plot(plotable_data,plot_config)
