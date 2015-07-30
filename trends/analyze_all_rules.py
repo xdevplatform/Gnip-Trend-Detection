@@ -51,6 +51,7 @@ parser.add_argument("-c",dest="config_file_name",default=None)
 parser.add_argument("-i",dest="input_file_names",default=None)   
 parser.add_argument("-d",dest="input_file_base_dir",default=None)   
 parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
+parser.add_argument("-e",dest="analyzed_data_file",default="output_analyzed.pkl")
 parser.add_argument("-r",dest="do_rebin",action="store_true",default=False,help="do rebin")   
 parser.add_argument("-a",dest="do_analysis",action="store_true",default=False,help="do analysis")   
 parser.add_argument("-p",dest="do_plot",action="store_true",default=False,help="do plotting")   
@@ -70,6 +71,10 @@ else:
     model_name = config.get("analyze","model_name")
     model_config = dict(config.items(model_name + "_model"))
     plot_config = dict(config.items("plot")) 
+    if "logscale_eta" in plot_config:
+        plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
+    else:
+        plot_config["logscale_eta"] = False
 
 logr = logging.getLogger("analyzer")
 if logr.handlers == []:
@@ -80,10 +85,6 @@ if logr.handlers == []:
     logr.addHandler(hndlr) 
     logr.setLevel(lvl)
 logr.info("Analysis starting")
-
-if args.do_plot and not args.do_analysis:
-    logr.error("Can't plot without analysis first. Exiting.")
-    sys.exit(1)
 
 if args.do_rebin:
     
@@ -171,80 +172,28 @@ if args.do_analysis:
     import models
     model = getattr(models,model_name)(config=model_config) 
 
-    # auto-generate this plotting param from re-bin params
-    plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
-
     # iterate over rule data and analyze point-by-point
-    saved_data_list = [] 
+    saved_data = {}
     data = pickle.load(open(args.output_file_name))
     for rule, rule_data in data.items():
         logr.info(u"analyzing rule: {}".format(rule))
         plotable_data = analyzer(rule_data,model,logr) 
-        # remove spaces in rule name
-        rule_name = rule.replace(" ","-")[0:100]
-        plot_config["plot_title"] = rule_name
-        if args.do_plot:
-            return_val = plotter(plotable_data,plot_config) 
-            # the plotter returns -1 if the counts data don't exist
-            if return_val == -1:
-                continue
 
         # save data
         if plotable_data != []:
-            saved_data_list.append((rule_name,plotable_data))
-  
-    def max_last_field_getter(tup): 
-        """ a function that acts on tuples like: 
-        ( [rule], [ (1_field_1, 1_field_2, 1_field_3 ... 1_field_n),(2_field_1,2_field_2,2_field_3...2_field_n)...] )
-        and returns the largest m_field_n value, where n is the (fixed) size of the tuple in the list, 
-        and m is the length of the list
-        """
-        plotable_data = tup[1] 
-        m = max(plotable_data, key=operator.itemgetter(-1)) 
-        logr.debug("{} - max eta: {}".format(tup[0],m[-1]))
-        return m[-1]
+            saved_data.update([(rule,plotable_data)])
 
-    def area_under_eta_curve(tup):
-        """ a function that acts on tuples like:
-        ( [rule], [ (tb_1,count_1,eta_1),(tb_2,count_2,eta_2)... ] )
-        and calculated the area under the eta curve for a window of size "half_window_size"
-        """
-        rule = tup[0]
-        data = tup[1]
-        
-        index = 0 
-        half_window_size = 3
+    pickle.dump(saved_data,open(args.analyzed_data_file,"w"))
 
-        auc_list = []
-        for tb,ct,eta in data:
-            if index < half_window_size:
-                auc_list.append((tb,ct,eta,0))
-                index += 1
-                continue
-            auc = 0
-            for tb,ct,eta in data[index-half_window_size:index+half_window_size+1]:
-                auc += eta
-            auc_list.append((tb,ct,eta,auc))
-            index += 1
-        return (rule,auc_list)        
+if args.do_plot:
 
-    # sort the saved data list by maximum eta value
-    sorted_data_list = list(reversed(sorted(saved_data_list, key=max_last_field_getter)))
-    
-    # print top 3 rules by max eta value
-    for rule_name, data in sorted_data_list[0:3]: 
-        max_pt = max(data,key=operator.itemgetter(2))
-        print("Rule: {0} - maximum eta: {1:.1f} at count: {2} / timestamp: {3}".format(rule_name, max_pt[2], max_pt[1], max_pt[0]))
+    # auto-generate this plotting param from re-bin params
+    plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
 
-    # append area-under-curve to data
-    auc_data_list = [ area_under_eta_curve(tup) for tup in saved_data_list]
-
-    # sort the saved data list by maximum area-under-eta-curve value
-    sorted_data_list = list(reversed(sorted(auc_data_list, key=max_last_field_getter)))
-    
-    # print top 3 rules by max area-under-eta-curve value
-    for rule_name, data in sorted_data_list[0:3]: 
-        max_pt = max(data,key=operator.itemgetter(3))
-        print("Rule: {0} - maximum area-under-eta-curve: {1:.1f} at count: {2} / timestamp: {3}".format(rule_name, max_pt[3], max_pt[1], max_pt[0]))
-
+    for rule, plotable_data in pickle.load(open(args.analyzed_data_file)).items():
+        logr.info(u"plotting results for rule: {}".format(rule))
+        # remove spaces in rule name
+        rule_name = rule.replace(" ","-")[0:100]
+        plot_config["plot_title"] = rule_name
+        plotter(plotable_data,plot_config) 
     

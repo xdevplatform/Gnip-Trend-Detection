@@ -9,7 +9,7 @@ def plot(plotable_data,config):
     plotable_data is a list of tuples with the following structure:
     (time_bucket, count, eta)
     """
-    use_x_var = False
+    use_x_var = True
 
     tbs = [tup[0].start_time for tup in plotable_data]
     cts = [tup[1] for tup in plotable_data]
@@ -35,7 +35,7 @@ def plot(plotable_data,config):
     import matplotlib.dates as mdates
     ax1.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
     plt.locator_params(axis = 'y', nbins = 4)
-    ax1.set_xlabel("time ({} bins)".format(config["x_unit"]))
+    ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
 
     ax2 = ax1.twinx()
     plotter="plot"
@@ -96,9 +96,12 @@ if __name__ == "__main__":
             plot_config["plot_title"] = "output"
             plot_config["plot_dir"] = "."
         rebin_config = dict(config.items("rebin"))
+        rule_name = rebin_config["rule_name"]
         plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
         if "logscale_eta" in plot_config:
             plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
+        else:
+            plot_config["logscale_eta"] = False
     else:
         model_config = {"alpha":0.99,"mode":"lc"}
         model_name = "Poisson"
@@ -114,9 +117,9 @@ if __name__ == "__main__":
 
     model = getattr(models,model_name)(config=model_config) 
     if args.analyzed_data_file is not None:
-        plotable_data = pickle.load(open(args.analyzed_data_file))
+        plotable_data = pickle.load(open(args.analyzed_data_file))[rule_name]
     else:
-        generator = pickle.load(open(args.input_file_name))
+        generator = pickle.load(open(args.input_file_name))[rule_name]
         plotable_data = analyzer(generator,model,logr)
     
     plot(plotable_data,plot_config)

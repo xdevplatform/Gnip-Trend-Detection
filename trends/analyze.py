@@ -52,9 +52,10 @@ if __name__ == "__main__":
     if args.verbose:
         logr.setLevel(logging.DEBUG)
 
+    rule_name = config.get("rebin","rule_name")
     model = getattr(models,model_name)(config=model_config) 
-    generator = pickle.load(open(args.input_file_name))
+    generator = pickle.load(open(args.input_file_name))[rule_name] 
     plotable_data = analyze(generator,model,logr)
     if args.analyzed_data_file is not None:
-        pickle.dump(plotable_data,open(args.analyzed_data_file,"w"))
+        pickle.dump({rule_name:plotable_data},open(args.analyzed_data_file,"w"))
 

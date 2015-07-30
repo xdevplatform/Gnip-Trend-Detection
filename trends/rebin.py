@@ -230,4 +230,4 @@ if __name__ == "__main__":
         final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,logger_name="rebin",**kwargs)
     else:
         final_sorted_data_tuples = rebin(input_file_names=args.input_file_names,**kwargs)
-    pickle.dump(final_sorted_data_tuples,open(args.output_file_name,"w"))
+    pickle.dump({kwargs["rule_name"]:final_sorted_data_tuples},open(args.output_file_name,"w"))
