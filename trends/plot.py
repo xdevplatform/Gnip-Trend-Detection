@@ -24,9 +24,9 @@ def plot(plotable_data,config):
     
     ax1 = fig.add_subplot(111)
     if use_x_var:
-        ax1.plot(tbs,cts,'bo',tbs,cts,'k-') 
+        ax1.plot(tbs,cts,'b.',tbs,cts,'k-') 
     else:
-        ax1.plot(cts,'bo',cts,'k-') 
+        ax1.plot(cts,'b.',cts,'k-') 
     ax1.set_ylabel("counts",color='b',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
@@ -38,10 +38,13 @@ def plot(plotable_data,config):
     ax1.set_xlabel("time ({} bins)".format(config["x_unit"]))
 
     ax2 = ax1.twinx()
+    plotter="plot"
+    if config["logscale_eta"]:
+        plotter="semilogy"
     if use_x_var:
-        ax2.plot(tbs,eta,'r')
+        getattr(ax2,plotter)(tbs,eta,'r')
     else:
-        ax2.plot(eta,'r')
+        getattr(ax2,plotter)(eta,'r')
     min_eta = 0
     if min(eta) > 0:
         min_eta = min(eta) * 0.9
@@ -94,11 +97,15 @@ if __name__ == "__main__":
             plot_config["plot_dir"] = "."
         rebin_config = dict(config.items("rebin"))
         plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
+        if "logscale_eta" in plot_config:
+            plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
     else:
         model_config = {"alpha":0.99,"mode":"lc"}
         model_name = "Poisson"
         plot_config["plot_title"] = "output"
         plot_config["plot_dir"] = "."
+        plot_config["logscale_eta"] = False
+        plot_config["x_unit"] = "null"
    
     if args.plot_title is not None:
         plot_config["plot_title"] = args.plot_title
@@ -106,10 +113,10 @@ if __name__ == "__main__":
         logr.setLevel(logging.DEBUG)
 
     model = getattr(models,model_name)(config=model_config) 
-    generator = pickle.load(open(args.input_file_name))
     if args.analyzed_data_file is not None:
         plotable_data = pickle.load(open(args.analyzed_data_file))
     else:
+        generator = pickle.load(open(args.input_file_name))
         plotable_data = analyzer(generator,model,logr)
     
     plot(plotable_data,plot_config)
