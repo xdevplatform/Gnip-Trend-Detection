@@ -171,6 +171,9 @@ if args.do_analysis:
     import models
     model = getattr(models,model_name)(config=model_config) 
 
+    # auto-generate this plotting param from re-bin params
+    plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
+
     # iterate over rule data and analyze point-by-point
     saved_data_list = [] 
     data = pickle.load(open(args.output_file_name))

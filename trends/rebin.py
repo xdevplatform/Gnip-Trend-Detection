@@ -37,9 +37,9 @@ import models
 from time_bucket import TimeBucket
 
 # timestamps read from files are expected in this format
-#EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+EXPLICIT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 #EXPLICIT_DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
-EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
+#EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 #EXPLICIT_DATETIME_FORMAT = "%Y%m%d%H%M"
 # keyword arguments start/stop time are expected in this format
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
@@ -102,7 +102,7 @@ def rebin(**kwargs):
                     
                     # sanity check: input time buckets must always be smaller than output time bucket
                     if time_bucket.size() > datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])}):
-                        sys.stderr.write("Input time bucket {} is larger that {}{}\n".format(time_bucket,str(kwargs["n_binning_unit)"]),kwargs["binning_unit"]))
+                        sys.stderr.write("Input time bucket {} is larger that {}{}\n".format(time_bucket,str(kwargs["n_binning_unit"]),kwargs["binning_unit"]))
                         sys.exit(-1)
                     count = line_split[2]
                     my_tuple = time_bucket, count
