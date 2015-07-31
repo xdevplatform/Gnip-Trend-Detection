@@ -37,11 +37,6 @@ these insights are not limited to any particular segments of time. By
 understanding the time-dependent behavior of groups of social media users, we
 can identify and even predict important real-world trends.
 
-%Interactions in social data tell us about the real world, and this view of the world 
-%is not limited to snapshots in time. 
-%By understanding the time-dependent behavior of groups of social media users, we
-%can identify and even predict important real-world trends. 
-
 What sort of real-world activities, events, and trends might be reflected in
 social data? And what properties of those events might we want to know?
 
@@ -59,26 +54,6 @@ real-world meaning (e.g. seasonal trends, holiday events)? If so, do these
 assignments point toward a particular choice of quantitative model for the
 event? If the identification of an atypical period of time can be quantified,
 can it be automated? And can it be used to predict future behavior?
-
-%Suppose an influential financial analyst Tweets a strong opinion about a stock,
-%and the Tweet goes viral. Or suppose a large number of customers take to
-%Twitter to complain about a new product. In both cases, a good first question
-%is: when did the event happen, or when did the trend start? As a followup, we
-%can also ask: how significant is the change? How large is the increase or
-%decrease? More importantly, how large is the change relative to typical
-%changes? The quantification not only allows an analyst to distinguish the
-%atypical from the typical, but it also allows them to compare one atypical
-%event to another. Are there characteristics of the atypical events that allow
-%them to be separated into groups that can be assigned real-world meaning (e.g.
-%seasonal trends, holiday events)? If so, do these assignments point toward a
-%particular choice of quantitative model for the event? 
-%If the identification of an atypical period of time
-%can be quantified, can it be automated? And can it be used to predict future
-%behavior?
-
-%After reading this paper, you will be well on your way to building a system to
-%discover, measure, compare and discuss changes in time series data that arise
-%from online social interactions.
 
 After reading this paper, you will be well on your way to building a system for
 discovering, measuring, comparing and discussing changes in time series data
@@ -225,14 +200,14 @@ trend”. Deviations from the background model are described by a figure-of-meri
 called $\eta$,
 and large values of $\eta$ can be said to disprove the null hypothesis. 
 In other techniques, the model includes both a background component and
-and trend-like component. In these cases, the $\eta$ value quantifies the 
+trend-like component. In these cases, the $\eta$ value quantifies the 
 extent to which the data look more like a trend than a non-trend. 
 Whatever the model, we say that the topic is trending at the time the
 $\eta$ exceeds a predetermined value. 
 
 To calculate $\eta$, we typically must choose some model parameter values. 
 If we have access to historical data that is labeled with truth 
-(trend or no-trend) and the true trend start time, we
+(trend or non-trend) and the true trend start time, we
 can measure the performance of a choice of model and parameter values, in terms
 of the precision, the recall, and time-to-detection. 
 %By recall, we mean the fraction of true trends that are identified by the algorithm. 
@@ -270,7 +245,7 @@ In this Poisson model, the unlikeliness of a particular count $c_i$ can be
 quantified by the distance from the mean ($\nu$) in multiples of the confidence 
 interval (CI) with confidence level $\alpha$. Confidence intervals for a Poisson mean $\nu$ and
 confidence level $\alpha$ can be found in \cite{George:2012}. 
-The parameter $\eta$ described the unlikeliness of a particular point:
+The parameter $\eta$ describes the unlikeliness of a particular point:
 \begin{equation}
     c_i = \eta \cdot \textrm{CI}(\alpha, \nu) + \nu, \textrm{where } \nu = c_{i-1}.
 \end{equation}
