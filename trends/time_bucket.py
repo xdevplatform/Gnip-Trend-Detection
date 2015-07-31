@@ -119,10 +119,12 @@ class TimeBucket:
         if self.is_lowerlapped_by(obj):
             overlap = obj.stop_time - self.start_time
             fraction = overlap.total_seconds() / self.size().total_seconds() 
-            return fraction
+            return float(fraction)
         elif self.is_upperlapped_by(obj):
             overlap = self.stop_time - obj.start_time
             fraction = overlap.total_seconds() / self.size().total_seconds()
-            return fraction 
+            return float(fraction) 
+        elif obj in self:
+            return float(obj.size().total_seconds() / self.size().total_seconds())
         else:
-            return 0
+            return float(0)
