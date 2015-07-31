@@ -200,14 +200,14 @@ trend”. Deviations from the background model are described by a figure-of-meri
 called $\eta$,
 and large values of $\eta$ can be said to disprove the null hypothesis. 
 In other techniques, the model includes both a background component and
-and trend-like component. In these cases, the $\eta$ value quantifies the 
+trend-like component. In these cases, the $\eta$ value quantifies the 
 extent to which the data look more like a trend than a non-trend. 
 Whatever the model, we say that the topic is trending at the time the
 $\eta$ exceeds a predetermined value. 
 
 To calculate $\eta$, we typically must choose some model parameter values. 
 If we have access to historical data that is labeled with truth 
-(trend or no-trend) and the true trend start time, we
+(trend or non-trend) and the true trend start time, we
 can measure the performance of a choice of model and parameter values, in terms
 of the precision, the recall, and time-to-detection. 
 %By recall, we mean the fraction of true trends that are identified by the algorithm. 
@@ -245,7 +245,7 @@ In this Poisson model, the unlikeliness of a particular count $c_i$ can be
 quantified by the distance from the mean ($\nu$) in multiples of the confidence 
 interval (CI) with confidence level $\alpha$. Confidence intervals for a Poisson mean $\nu$ and
 confidence level $\alpha$ can be found in \cite{George:2012}. 
-The parameter $\eta$ described the unlikeliness of a particular point:
+The parameter $\eta$ describes the unlikeliness of a particular point:
 \begin{equation}
     c_i = \eta \cdot \textrm{CI}(\alpha, \nu) + \nu, \textrm{where } \nu = c_{i-1}.
 \end{equation}
