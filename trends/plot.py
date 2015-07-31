@@ -78,37 +78,30 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
-    parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
+    parser.add_argument("-c",dest="config_file_name",default="config.cfg",help="get configuration from this file")
     parser.add_argument("-t",dest="plot_title",default=None) 
     parser.add_argument("-d",dest="analyzed_data_file",default=None) 
     parser.add_argument("-v",dest="verbose",action="store_true",default=False) 
     args = parser.parse_args()
 
     plot_config = {}
-    if args.config_file_name is not None:
-        config = ConfigParser.SafeConfigParser()
-        config.read(args.config_file_name)
-        model_name = config.get("analyze","model_name")
-        model_config = dict(config.items(model_name + "_model")) 
-        if config.has_section("plot"):
-            plot_config = dict(config.items("plot"))
-        else:
-            plot_config["plot_title"] = "output"
-            plot_config["plot_dir"] = "."
-        rebin_config = dict(config.items("rebin"))
-        rule_name = rebin_config["rule_name"]
-        plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
-        if "logscale_eta" in plot_config:
-            plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
-        else:
-            plot_config["logscale_eta"] = False
+    
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config_file_name)
+    model_name = config.get("analyze","model_name")
+    model_config = dict(config.items(model_name + "_model")) 
+    if config.has_section("plot"):
+        plot_config = dict(config.items("plot"))
     else:
-        model_config = {"alpha":0.99,"mode":"lc"}
-        model_name = "Poisson"
         plot_config["plot_title"] = "output"
         plot_config["plot_dir"] = "."
+    rebin_config = dict(config.items("rebin"))
+    rule_name = rebin_config["rule_name"]
+    plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
+    if "logscale_eta" in plot_config:
+        plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
+    else:
         plot_config["logscale_eta"] = False
-        plot_config["x_unit"] = "null"
    
     if args.plot_title is not None:
         plot_config["plot_title"] = args.plot_title

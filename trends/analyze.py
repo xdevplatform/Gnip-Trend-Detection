@@ -36,18 +36,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
     parser.add_argument("-d",dest="analyzed_data_file",default=None) 
-    parser.add_argument("-c",dest="config_file_name",default=None,help="get configuration from this file")
+    parser.add_argument("-c",dest="config_file_name",default="config.cfg",help="get configuration from this file")
     parser.add_argument("-v",dest="verbose",action="store_true",default=False)
     args = parser.parse_args()
 
-    if args.config_file_name is not None:
-        config = ConfigParser.SafeConfigParser()
-        config.read(args.config_file_name)
-        model_name = config.get("analyze","model_name")
-        model_config = dict(config.items(model_name + "_model"))
-    else:
-        model_config = {"alpha":0.99,"mode":"lc","period_list":["hour"]}
-        model_name = "Poisson"
+    config = ConfigParser.SafeConfigParser()
+    config.read(args.config_file_name)
+    model_name = config.get("analyze","model_name")
+    model_config = dict(config.items(model_name + "_model"))
     
     if args.verbose:
         logr.setLevel(logging.DEBUG)
