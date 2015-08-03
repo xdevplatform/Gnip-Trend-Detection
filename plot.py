@@ -113,6 +113,6 @@ if __name__ == "__main__":
         plotable_data = pickle.load(open(args.analyzed_data_file))[rule_name]
     else:
         generator = pickle.load(open(args.input_file_name))[rule_name]
-        plotable_data = analyzer(generator,model,logr)
+        plotable_data = analyzer(generator,model,None,None,logr)
     
     plot(plotable_data,plot_config)

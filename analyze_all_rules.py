@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+
 """
 
 This script operates on a set of time series. 
@@ -84,7 +86,14 @@ if logr.handlers == []:
     hndlr.setLevel(lvl)
     logr.addHandler(hndlr) 
     logr.setLevel(lvl)
-logr.info("Analysis starting")
+
+logr.info("rebin/analysis/plotting starting") 
+
+## set up some multiprocessing stuff
+
+# results from the distributed processes are returned to this queue
+queue = Queue(queue_size)
+
 
 if args.do_rebin:
     
@@ -99,9 +108,6 @@ if args.do_rebin:
         sys.stderr.write("Input file(s) must be specified. Exiting.\n")
         sys.exit(1)
     
-    # results from the distributed processes are returned to this queue
-    queue = Queue(queue_size)
-
     # loop over all rules in rules file and generate config objects, 
     # starting from config file and command-line arguments
     rule_config_list = []
@@ -157,7 +163,7 @@ if args.do_rebin:
             rule_counter -= 1
         time.sleep(0.1) 
 
-    logr.info("Got all results")
+    logr.info("Got all rebin results")
 
     # allow processes to gently die
     for p in process_list:
@@ -173,15 +179,24 @@ if args.do_analysis:
     model = getattr(models,model_name)(config=model_config) 
 
     # iterate over rule data and analyze point-by-point
-    saved_data = {}
-    data = pickle.load(open(args.output_file_name))
+    process_list = []
+    data = pickle.load(open(args.output_file_name)) 
     for rule, rule_data in data.items():
         logr.info(u"analyzing rule: {}".format(rule))
-        plotable_data = analyzer(rule_data,model,logr) 
+        p = Process(target=analyzer,args=(rule_data,model,rule,queue)) 
+        p.start()
+        process_list.append(p) 
 
-        # save data
-        if plotable_data != []:
-            saved_data.update([(rule,plotable_data)])
+    # get and save data
+    saved_data = {}
+    rule_counter = len(process_list)
+    while rule_counter != 0:
+        saved_data.update([queue.get()])  
+        rule_counter -= 1
+
+    # allow processes to gently die
+    for p in process_list:
+        p.join() 
 
     pickle.dump(saved_data,open(args.analyzed_data_file,"w"))
 
