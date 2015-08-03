@@ -63,11 +63,11 @@ The work is divided into three basic tasks:
 
 * Bin choice - The original data is filtered for a specific "rule" name, and 
 collected into larger, even-sized bins, sized to the user's wish. 
-This is performed by `trends/rebin.py`. 
+This is performed by `rebin.py`. 
 * Analysis - Each data point is analyzed according to a model implemented in
-the `trends/models.py` file. Models return a figure-of-merit for each point.
+the `models.py` file. Models return a figure-of-merit for each point.
 * Plotting - The original time series is plotted and overlaid with a plot of the *eta* values. 
-This is performed by `trends/plot.py`. 
+This is performed by `plot.py`. 
 
 ## Configuration
 
@@ -93,21 +93,21 @@ from the repository directory.
 The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
 Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
 
-`./trends/rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
+`./rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data.
 
 Next, we will run the analysis script, which when run alone, should return nothing.
 Remember, all the modeling specification is in the config file.
 
-`./trends/analyze.py -i example/scotus.pkl -c example/config.cfg`
+`./analyze.py -i example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data, including the results for *eta*. 
 
 To view results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
 
-`./trends/plot.py -i example/scotus.pkl -c example/config.cfg` 
+`./plot.py -i example/scotus.pkl -c example/config.cfg` 
 
 The output PNG should be in the example directory and look like:
 
@@ -144,7 +144,7 @@ of additional complexity and CPU time. The ROC curve for this model looks like:
 
 ## Analysis Model Details
 
-The various trend detection techniques are implemented as classes in `trends/models.py`.
+The various trend detection techniques are implemented as classes in `models.py`.
 The idea is for each model to get updated point-by-point with the time series data,
 and to store internally whichever data is need to calculate the figure of merit for
 the latest point.
