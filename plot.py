@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import datetime
 import matplotlib as mpl
 mpl.use('Agg')
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 def plot(plotable_data,config):            
@@ -10,10 +12,18 @@ def plot(plotable_data,config):
     (time_bucket, count, eta)
     """
     use_x_var = True
+    if "use_x_var" in config:
+        use_x_var = bool(config["use_x_var"])
+    if "start_time" in config and "stop_time" in config:
+        start_tm = datetime.datetime.strptime(config["start_time"],"%Y%m%d%H%M")
+        stop_tm = datetime.datetime.strptime(config["stop_time"],"%Y%m%d%H%M")
+        data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data if tup[0].start_time > start_tm and tup[0].stop_time < stop_tm ]
+    else:
+        data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data] 
 
-    tbs = [tup[0].start_time for tup in plotable_data]
-    cts = [tup[1] for tup in plotable_data]
-    eta = [tup[2] for tup in plotable_data]
+    tbs = [tup[0] for tup in data]
+    cts = [tup[1] for tup in data]
+    eta = [tup[2] for tup in data]
     if cts == []:
         return -1
     max_cts = max(cts)
@@ -27,15 +37,19 @@ def plot(plotable_data,config):
         ax1.plot(tbs,cts,'b.',tbs,cts,'k-') 
     else:
         ax1.plot(cts,'b.',cts,'k-') 
+    # fancify
     ax1.set_ylabel("counts",color='b',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
         tl.set_color('b')
         tl.set_fontsize(10)
-    import matplotlib.dates as mdates
-    ax1.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
     plt.locator_params(axis = 'y', nbins = 4)
     ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
+    formatter = mdates.DateFormatter('%Y-%m-%d')
+    ax1.xaxis.set_major_formatter( formatter ) 
+    days = mdates.DayLocator()
+    ax1.xaxis.set_major_locator(days) 
+    fig.autofmt_xdate()
 
     ax2 = ax1.twinx()
     plotter="plot"
@@ -53,8 +67,7 @@ def plot(plotable_data,config):
     for tl in ax2.get_yticklabels():
         tl.set_color('r')
         tl.set_fontsize(10)
-    fig.autofmt_xdate()
-  
+    
     plt.savefig(config["plot_dir"] + "/{}.{}".format(config["plot_title"],config["plot_extension"]),dpi=400) 
 
 
@@ -86,7 +99,7 @@ if __name__ == "__main__":
 
     plot_config = {}
     
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser.ConfigParser()
     config.read(args.config_file_name)
     model_name = config.get("analyze","model_name")
     model_config = dict(config.items(model_name + "_model")) 
@@ -95,7 +108,8 @@ if __name__ == "__main__":
     else:
         plot_config["plot_title"] = "output"
         plot_config["plot_dir"] = "."
-    rebin_config = dict(config.items("rebin"))
+    rebin_items = config.items("rebin")
+    rebin_config = dict(rebin_items)
     rule_name = rebin_config["rule_name"]
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
     if "logscale_eta" in plot_config:
