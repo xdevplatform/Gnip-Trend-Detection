@@ -307,7 +307,7 @@ worse precision.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_bucket_size.pdf}
-\caption{Counts of ``\#scotus'' mentions, in variously-sized time buckets. The time
+\caption{Counts of ``\#scotus'' mentions, in variously-sized bins. The time
 series data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the previous point, and plotted in red. In this case,
 $\alpha = 0.99$.}
@@ -360,7 +360,7 @@ around hour 650.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_1month_pbppm.pdf}
-\caption{Counts of ``\#scotus'' mentions, in 1-hour time buckets. The time series
+\caption{Counts of ``\#scotus'' mentions, in 1-hour bins. The time series
 data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the previous point, and plotted in red. In this case, 
 $\alpha=0.99$.} \label{fig:scotus3}
@@ -370,7 +370,7 @@ $\alpha=0.99$.} \label{fig:scotus3}
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_1month_ccpm.pdf}
-\caption{Counts of ``\#scotus'' mentions, in 1-hour time buckets. The time series
+\caption{Counts of ``\#scotus'' mentions, in 1-hour bins. The time series
 data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the average value from the same hour on previous days
 in the time series, and plotted in red. In this case, $\alpha=0.99$. }
@@ -411,9 +411,10 @@ divided by the total weight for the non-trending time series.
 We start by collecting \textit{reference} time series from historical data. Based on their
 shape and the details of real-life events associated with them, we label
 them “$+$” (trending) or “$-$” (non-trending). The sets of references time
-series are named $R+$ and $R-$ (and together comprise $R$), and typically haves sizes in the 100s. 
+series are named $R+$ and $R-$ (and together comprise $R$). 
+The model has been shown to be effective when the size of $R$ is $\mathcal{O}(100)$. 
 In general, the elements of $R+$ and $R-$ are much 
-longer than the time series that they are compared to. 
+longer than the time series with which they are compared. 
 
 We next define a distance between two same-length time series: $d(r,s)$,
 where $r$ is in $R+$ or $R-$ and $s$ is the time series that we’re evaluating for
@@ -450,13 +451,12 @@ data, with the lag time demonstrating the effect of the data-smoothing.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/nikolov_trend.pdf} 
-\caption{Data from a single reference time series in $R+$ are plotted in black, for
+\caption{Data from a trending time series are plotted in black with blue dots, for
 2-minute time intervals. Based on a library of 500 reference trends in $R+$
-(minus the one being tested) and 500 reference non-trends in $R-$, the figure of
+and 500 reference non-trends in $R-$, the figure of
 merit $\eta$ is calculated for each point and plotted in red. The length of
-elements of $R$ is 200 minutes, while the length of the testing sub-series ($s$) is 100
-minutes. 
-%For distance calculations, the data are smoothed over a 40 minute window.
+elements of $R$ is 300 minutes, while the length of the tested sub-series ($s$) is 230
+minutes. For distance calculations, the data are smoothed over a 10 minute window.
 }
 \label{fig:nikolov_eta} 
 \end{center}
