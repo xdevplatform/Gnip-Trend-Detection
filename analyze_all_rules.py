@@ -32,7 +32,7 @@ import os
 import copy
 import operator
 import fnmatch
-from multiprocessing import Process,Queue,Pool
+from multiprocessing import mp
 
 from rebin import rebin
 from analyze import analyze as analyzer
@@ -52,8 +52,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-c",dest="config_file_name",default=None)   
 parser.add_argument("-i",dest="input_file_names",default=None)   
 parser.add_argument("-d",dest="input_file_base_dir",default=None)   
-parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
-parser.add_argument("-e",dest="analyzed_data_file",default="output_analyzed.pkl")
+parser.add_argument("-o",dest="rebined_file_name",default="rebinned.pkl")    
+parser.add_argument("-e",dest="analyzed_file_name",default="rebinned_analyzed.pkl")
 parser.add_argument("-r",dest="do_rebin",action="store_true",default=False,help="do rebin")   
 parser.add_argument("-a",dest="do_analysis",action="store_true",default=False,help="do analysis")   
 parser.add_argument("-p",dest="do_plot",action="store_true",default=False,help="do plotting")   
@@ -92,7 +92,7 @@ logr.info("rebin/analysis/plotting starting")
 ## set up some multiprocessing stuff
 
 # results from the distributed processes are returned to this queue
-queue = Queue(queue_size)
+queue = mp.Queue(queue_size)
 
 
 if args.do_rebin:
@@ -148,7 +148,7 @@ if args.do_rebin:
     # two arguments: the list of config objects and the function (rebin) to run
     process_list = []
     for chunk in chunks(rule_config_list,chunk_size):
-        p = Process(target=manage_rule_list,args=(chunk,rebin))
+        p = mp.Process(target=manage_rule_list,args=(chunk,rebin))
         p.start()
         process_list.append(p) 
 
@@ -183,7 +183,7 @@ if args.do_analysis:
     data = pickle.load(open(args.output_file_name)) 
     for rule, rule_data in data.items():
         logr.info(u"analyzing rule: {}".format(rule))
-        p = Process(target=analyzer,args=(rule_data,model,rule,queue)) 
+        p = mp.Process(target=analyzer,args=(rule_data,model,rule,queue)) 
         p.start()
         process_list.append(p) 
 
@@ -198,14 +198,14 @@ if args.do_analysis:
     for p in process_list:
         p.join() 
 
-    pickle.dump(saved_data,open(args.analyzed_data_file,"w"))
+    pickle.dump(saved_data,open(args.analyzed_file_name,"w"))
 
 if args.do_plot:
 
     # auto-generate this plotting param from re-bin params
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
 
-    for rule, plotable_data in pickle.load(open(args.analyzed_data_file)).items():
+    for rule, plotable_data in pickle.load(open(args.analyzed_file_name)).items():
         logr.info(u"plotting results for rule: {}".format(rule))
         # remove spaces in rule name
         rule_name = rule.replace(" ","-")[0:100]

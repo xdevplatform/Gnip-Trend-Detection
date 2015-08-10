@@ -38,16 +38,7 @@ import traceback
 import models
 from time_bucket import TimeBucket
 
-# timestamps read from files are expected to match an element of this list
-dt_format_list = ["%Y-%m-%d %H:%M:%S.%f"
-        ,"%Y-%m-%dT%H:%M"
-        ,"%Y%m%d%H%M%S"
-        ,"%Y%m%d%H%M"
-        ]
-# as a last resort, this format will be tried
-INPUT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-
-# keyword arguments start/stop time are expected in this format
+# keyword arguments start/stop time are written in this format
 COMPACT_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
 def rebin(**kwargs):
@@ -57,6 +48,7 @@ def rebin(**kwargs):
         start_time
         stop_time
         input_file_names
+        input_dt_format
         binning_unit
         n_binning_unit
     Optional keyword arguments are:
@@ -98,31 +90,16 @@ def rebin(**kwargs):
                     else:
                         logr.debug("{}".format(line))
                         
-                        # manage datetime formats
-                        this_stop_time = None
-                        for dt_format in dt_format_list:
-                            try:
-                                this_stop_time = datetime.datetime.strptime(line_split[0],dt_format)  
-                                dt = datetime.timedelta(seconds=int(float(line_split[4])))
-                                this_start_time = this_stop_time - dt
-                                time_bucket = TimeBucket(this_start_time, this_stop_time, dt_format)  
-                                break
-                            except ValueError:
-                                continue
-                        if this_stop_time is None:
-                            this_stop_time = datetime.datetime.strptime(line_split[0],INPUT_DATETIME_FORMAT)
+                        this_stop_time = datetime.datetime.strptime(line_split[0],kwargs["input_dt_format"])  
+                        dt = datetime.timedelta(seconds=int(float(line_split[4])))
+                        this_start_time = this_stop_time - dt
                         
                         if this_stop_time > stop_time:
                             continue
                         if this_start_time < start_time:
                             continue
+                        time_bucket = TimeBucket(this_start_time, this_stop_time, kwargs["input_dt_format"])  
                         
-                        '''
-                        # sanity check: input time buckets must always be smaller than output time bucket
-                        if time_bucket.size() > datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])}):
-                            sys.stderr.write("Input time bucket {} is larger that {}{}\n".format(time_bucket,str(kwargs["n_binning_unit"]),kwargs["binning_unit"]))
-                            sys.exit(-1) 
-                        '''
                         count = line_split[2]
                         input_data.append((time_bucket, count)) 
 
