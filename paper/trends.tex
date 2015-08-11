@@ -42,7 +42,7 @@ social data? And what properties of those events might we want to know?
 
 Suppose that an influential financial analyst Tweets a strong opinion about a
 particular stock and that Tweet goes viral. Or suppose a large number of
-customers use Twitter to complain about a brand’s new product. In both cases,
+customers use Twitter to complain about a brand's new product. In both cases,
 good first questions are: when did the event happen, or when did the trend
 start? As a follow-up, we can also ask: how significant is the change?  How
 large is the increase or decrease? More importantly, how large is this change
@@ -83,7 +83,7 @@ difference of 10 orders of magnitude! Additionally, the size of the change can r
 counts of 10s through counts of billions. The community of users generating or
 associated with the change can range from a single person through a group of
 100 million people. It is difficult to construct algorithms that function
-evenly over such broad ranges of data. Finally, we know that changes of many
+consistently over such broad ranges of data. Finally, we know that change of many
 sorts is happening all the time, and we want to take care to identify single,
 rather than composite, changes.
 
@@ -203,16 +203,13 @@ In other techniques, the model includes both a background component and
 trend-like component. In these cases, the $\eta$ value quantifies the 
 extent to which the data look more like a trend than a non-trend. 
 Whatever the model, we say that the topic is trending at the time the
-$\eta$ exceeds a predetermined value. 
+$\eta$ exceeds a predetermined value, often called $\theta$. 
 
 To calculate $\eta$, we typically must choose some model parameter values. 
 If we have access to historical data that is labeled with truth 
 (trend or non-trend) and the true trend start time, we
 can measure the performance of a choice of model and parameter values, in terms
 of the precision, the recall, and time-to-detection. 
-%By recall, we mean the fraction of true trends that are identified by the algorithm. 
-%By time-to-detection, we mean the difference in time between the true start of
-%the trend and the first detection of it. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Point-by-point Poisson Model}
@@ -236,7 +233,7 @@ will generally follow the Poisson distribution,
 \end{equation}
 where $P$ is the probability of observing $c_i$ ``\#scotus'' Tweets in the given time
 window, when the expected number of such Tweets is $\nu$. While we have no way of
-knowing the true value of $\nu$, a good source is the time interval \textit{previous} to the
+knowing the true value of $\nu$, a good source for this information is the time interval \textit{previous} to the
 one being tested, $c_{i-1}$. We identify trends by counts $c_i$ that are particularly
 unlikely, given the previous count, $c_{i-1}$, and the assumption of Poisson
 distributed data. 
@@ -256,9 +253,6 @@ reject the null hypothesis when
 \end{equation}
 for predetermined values of $\eta_c$ and $\alpha$. Together, these two parameters
 control the performance of the algorithm. 
-%The references in
-%the Appendix have code that produces high-precision estimates of the
-Poisson confidence intervals. 
 
 In Figure~\ref{fig:scotus1}, we plot the hourly counts for a
 data set defined by the ``\#scotus'' hashtag. While there may be minor events
@@ -307,7 +301,7 @@ worse precision.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_bucket_size.pdf}
-\caption{Counts of ``\#scotus'' mentions, in variously-sized time buckets. The time
+\caption{Counts of ``\#scotus'' mentions, in variously-sized bins. The time
 series data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the previous point, and plotted in red. In this case,
 $\alpha = 0.99$.}
@@ -360,7 +354,7 @@ around hour 650.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_1month_pbppm.pdf}
-\caption{Counts of ``\#scotus'' mentions, in 1-hour time buckets. The time series
+\caption{Counts of ``\#scotus'' mentions, in 1-hour bins. The time series
 data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the previous point, and plotted in red. In this case, 
 $\alpha=0.99$.} \label{fig:scotus3}
@@ -370,7 +364,7 @@ $\alpha=0.99$.} \label{fig:scotus3}
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/scotus_1month_ccpm.pdf}
-\caption{Counts of ``\#scotus'' mentions, in 1-hour time buckets. The time series
+\caption{Counts of ``\#scotus'' mentions, in 1-hour bins. The time series
 data are shown in the blue dots with black lines. For each point, $\eta$ is
 calculated based on the average value from the same hour on previous days
 in the time series, and plotted in red. In this case, $\alpha=0.99$. }
@@ -411,9 +405,10 @@ divided by the total weight for the non-trending time series.
 We start by collecting \textit{reference} time series from historical data. Based on their
 shape and the details of real-life events associated with them, we label
 them “$+$” (trending) or “$-$” (non-trending). The sets of references time
-series are named $R+$ and $R-$ (and together comprise $R$), and typically haves sizes in the 100s. 
+series are named $R+$ and $R-$ (and together comprise $R$). 
+The model has been shown to be effective when the size of $R$ is $\mathcal{O}(100)$. 
 In general, the elements of $R+$ and $R-$ are much 
-longer than the time series that they are compared to. 
+longer than the time series with which they are compared. 
 
 We next define a distance between two same-length time series: $d(r,s)$,
 where $r$ is in $R+$ or $R-$ and $s$ is the time series that we’re evaluating for
@@ -450,13 +445,12 @@ data, with the lag time demonstrating the effect of the data-smoothing.
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{fig/nikolov_trend.pdf} 
-\caption{Data from a single reference time series in $R+$ are plotted in black, for
+\caption{Data from a trending time series are plotted in black with blue dots, for
 2-minute time intervals. Based on a library of 500 reference trends in $R+$
-(minus the one being tested) and 500 reference non-trends in $R-$, the figure of
+and 500 reference non-trends in $R-$, the figure of
 merit $\eta$ is calculated for each point and plotted in red. The length of
-elements of $R$ is 200 minutes, while the length of the testing sub-series ($s$) is 100
-minutes. 
-%For distance calculations, the data are smoothed over a 40 minute window.
+elements of $R$ is 300 minutes, while the length of the tested sub-series ($s$) is 230
+minutes. For distance calculations, the data are smoothed over a 10 minute window.
 }
 \label{fig:nikolov_eta} 
 \end{center}
