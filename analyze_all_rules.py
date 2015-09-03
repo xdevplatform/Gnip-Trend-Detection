@@ -32,7 +32,7 @@ import os
 import copy
 import operator
 import fnmatch
-from multiprocessing import mp
+import multiprocessing as mp
 
 from rebin import rebin
 from analyze import analyze as analyzer
@@ -43,20 +43,21 @@ from plot import plot as plotter
 ###
 #lvl = logging.DEBUG
 lvl = logging.INFO
-n_cpu = 8
+n_cpu = 24
 queue_size = 20000
 ###
 
 # get input, output, and config file naems from cmd-line argument parsing
 parser = argparse.ArgumentParser()
 parser.add_argument("-c",dest="config_file_name",default=None)   
-parser.add_argument("-i",dest="input_file_names",default=None)   
+parser.add_argument("-i",dest="input_file_names",default=None,nargs="+")   
 parser.add_argument("-d",dest="input_file_base_dir",default=None)   
-parser.add_argument("-o",dest="rebined_file_name",default="rebinned.pkl")    
+parser.add_argument("-o",dest="rebinned_file_name",default="rebinned.pkl")    
 parser.add_argument("-e",dest="analyzed_file_name",default="rebinned_analyzed.pkl")
 parser.add_argument("-r",dest="do_rebin",action="store_true",default=False,help="do rebin")   
 parser.add_argument("-a",dest="do_analysis",action="store_true",default=False,help="do analysis")   
 parser.add_argument("-p",dest="do_plot",action="store_true",default=False,help="do plotting")   
+parser.add_argument("-v",dest="verbose",action="store_true",default=False)   
 args = parser.parse_args()
 
 # parse config file, which contains model and rule info
@@ -77,6 +78,13 @@ else:
         plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
     else:
         plot_config["logscale_eta"] = False
+    if "plot_eta" in plot_config:
+        plot_config["plot_eta"] = config.getboolean("plot","plot_eta")
+    else:
+        plot_config["plot_eta"] = True
+
+if args.verbose:
+    lvl = logging.DEBUG
 
 logr = logging.getLogger("analyzer")
 if logr.handlers == []:
@@ -96,7 +104,6 @@ queue = mp.Queue(queue_size)
 
 
 if args.do_rebin:
-    
     # get input file names
     if args.input_file_base_dir is not None:
         args.input_file_names = []
@@ -107,7 +114,6 @@ if args.do_rebin:
     if args.input_file_names is None:
         sys.stderr.write("Input file(s) must be specified. Exiting.\n")
         sys.exit(1)
-    
     # loop over all rules in rules file and generate config objects, 
     # starting from config file and command-line arguments
     rule_config_list = []
@@ -163,14 +169,14 @@ if args.do_rebin:
             rule_counter -= 1
         time.sleep(0.1) 
 
-    logr.info("Got all rebin results")
+    logr.debug("Got all rebin results")
 
     # allow processes to gently die
     for p in process_list:
         p.join() 
 
     # save the data
-    pickle.dump(data,open(args.output_file_name,"w"))
+    pickle.dump(data,open(args.rebinned_file_name,"w"))
 
 if args.do_analysis:
    
@@ -180,12 +186,15 @@ if args.do_analysis:
 
     # iterate over rule data and analyze point-by-point
     process_list = []
-    data = pickle.load(open(args.output_file_name)) 
+    data = pickle.load(open(args.rebinned_file_name)) 
     for rule, rule_data in data.items():
+        if len(rule_data) == 0:
+            continue
         logr.info(u"analyzing rule: {}".format(rule))
         p = mp.Process(target=analyzer,args=(rule_data,model,rule,queue)) 
         p.start()
         process_list.append(p) 
+        time.sleep(2)
 
     # get and save data
     saved_data = {}
@@ -206,9 +215,12 @@ if args.do_plot:
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
 
     for rule, plotable_data in pickle.load(open(args.analyzed_file_name)).items():
+        if len(plotable_data) == 0:
+            continue
         logr.info(u"plotting results for rule: {}".format(rule))
         # remove spaces in rule name
         rule_name = rule.replace(" ","-")[0:100]
         plot_config["plot_title"] = rule_name
+        plot_config["plot_file_name"] = rule_name
         plotter(plotable_data,plot_config) 
     

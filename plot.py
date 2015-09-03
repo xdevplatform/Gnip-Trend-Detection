@@ -20,7 +20,6 @@ def plot(plotable_data,config):
         data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data if tup[0].start_time > start_tm and tup[0].stop_time < stop_tm ]
     else:
         data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data] 
-
     tbs = [tup[0] for tup in data]
     cts = [tup[1] for tup in data]
     eta = [tup[2] for tup in data]
@@ -34,7 +33,8 @@ def plot(plotable_data,config):
     
     ax1 = fig.add_subplot(111)
     if use_x_var:
-        ax1.plot(tbs,cts,'b.',tbs,cts,'k-') 
+        ax1.plot(tbs,cts,'k-') 
+        #ax1.plot(tbs,cts,'b.',tbs,cts,'k-') 
     else:
         ax1.plot(cts,'bo',cts,'k-') 
     
@@ -48,28 +48,30 @@ def plot(plotable_data,config):
     ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
     formatter = mdates.DateFormatter('%Y-%m-%d')
     ax1.xaxis.set_major_formatter( formatter ) 
-    days = mdates.DayLocator()
-    ax1.xaxis.set_major_locator(days) 
+    #days = mdates.DayLocator()
+    #ax1.xaxis.set_major_locator(days) 
     fig.autofmt_xdate()
 
-    ax2 = ax1.twinx()
-    plotter="plot"
-    if config["logscale_eta"]:
-        plotter="semilogy"
-    if use_x_var:
-        getattr(ax2,plotter)(tbs,eta,'r')
-    else:
-        getattr(ax2,plotter)(eta,'r')
-    min_eta = 0
-    if min(eta) > 0:
-        min_eta = min(eta) * 0.9
-    ax2.set_ylim(min_eta, max(eta)*1.1)
-    ax2.set_ylabel("eta",color='r',fontsize=10)
-    for tl in ax2.get_yticklabels():
-        tl.set_color('r')
-        tl.set_fontsize(10)
-   
+    if config['plot_eta']:
+        ax2 = ax1.twinx()
+        plotter="plot"
+        if config["logscale_eta"]:
+            plotter="semilogy"
+        if use_x_var:
+            getattr(ax2,plotter)(tbs,eta,'r')
+        else:
+            getattr(ax2,plotter)(eta,'r')
+        min_eta = 0
+        if min(eta) > 0:
+            min_eta = min(eta) * 0.9
+        ax2.set_ylim(min_eta, max(eta)*1.1)
+        ax2.set_ylabel("eta",color='r',fontsize=10)
+        for tl in ax2.get_yticklabels():
+            tl.set_color('r')
+            tl.set_fontsize(10)
+
     plt.savefig(config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])) 
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -114,6 +116,8 @@ if __name__ == "__main__":
     rule_name = rebin_config["rule_name"]
     if plot_config["plot_title"] == "":
         plot_config["plot_title"] = rule_name
+    if plot_config["plot_file_name"] == "":
+        plot_config["plot_file_name"] = rule_name
 
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
     
@@ -126,6 +130,10 @@ if __name__ == "__main__":
         plot_config["use_x_var"] = config.getboolean("plot","use_x_var")
     else:
         plot_config["use_x_var"] = True
+    if "plot_eta" in plot_config:
+        plot_config["plot_eta"] = config.getboolean("plot","plot_eta")
+    else:
+        plot_config["plot_eta"] = True
 
     if args.plot_title is not None:
         plot_config["plot_title"] = args.plot_title
