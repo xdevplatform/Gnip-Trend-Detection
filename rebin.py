@@ -123,7 +123,7 @@ def rebin(**kwargs):
 
         logr.debug("Finished generating grid for {}".format(kwargs["rule_name"]))
 
-        # add data to a dictionary with indicies mapped to the grid indicies
+        # add data to a dictionary with keys mapped to the grid indicies
         output_data = collections.defaultdict(int)
         for input_tb,input_count in input_data_sorted:
             logr.debug("input. TB: {}, count: {}".format(input_tb,input_count))
@@ -157,17 +157,23 @@ def rebin(**kwargs):
         
         # put data back into a sorted list of tuples
         sorted_output_data = []
-        for idx,count in sorted(output_data.items(), key=operator.itemgetter(0)):  
-            dt = grid[idx]
-            sorted_output_data.append((dt,count))
-            logr.debug("{} {}".format(dt,count))
 
-        # a mystery
-        try:
-            sorted_output_data.pop(0)     
-        except IndexError:
-            pass
+        # use these to strip off leading and trailing zero-count entries
+        prev_count = 0
+        last_non_zero_ct_idx = -1
 
+        # the grid is already time ordered, and the output_data are indexed
+        for idx,dt in enumerate(grid):
+            if idx in output_data:
+                count = output_data[idx]
+                last_non_zero_ct_idx = idx
+            else:
+                count = 0
+            if count != 0 or prev_count != 0:
+                sorted_output_data.append((dt,count))
+            prev_count = count
+        sorted_output_data = sorted_output_data[:last_non_zero_ct_idx+1]
+        
         # for use with multiprocessing
         if "return_queue" in kwargs:
             logr.debug("adding {} key to dict with value {}".format(kwargs["rule_name"],sorted_output_data)) 

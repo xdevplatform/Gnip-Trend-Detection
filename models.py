@@ -84,28 +84,19 @@ class WeightedDataTemplates(object):
             self.non_trend_weight = float(0)
             return
 
-
-        #reference_sized_test_series = self.total_series[-self.reference_length:]
-        ## transform the test series
-        #transformed_series = self.library.transform_input(reference_sized_test_series,is_test_series=True)
-        ## get correctly-sized test series
-        #test_series =  transformed_series[-self.series_length:]
-
-        ## transform a reference_legth sub-series
+        # transform a "reference_length"-sized sub-series
         transformed_series = self.library.transform_input(self.total_series[-self.reference_length:],is_test_series=True)
-        ## get correctly-sized test series
+        # get correctly-sized test series
         test_series =  transformed_series[-self.series_length:]
 
         self.trend_weight = float(0)
         for reference_series in self.library.trends:  
-            #print reference_series
             weight = self.weight(reference_series,test_series,check_for_self) 
             self.logger.debug("trend wt: {}".format(weight))
             self.trend_weight += weight
         
         self.non_trend_weight = float(0)
         for reference_series in self.library.non_trends: 
-            #print reference_series
             weight = self.weight(reference_series,test_series,check_for_self)
             self.logger.debug("non trend wt: {}".format(weight))
             self.non_trend_weight += weight

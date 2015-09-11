@@ -42,18 +42,14 @@ class Library(object):
         self.transformations = []
         self.transformations.append(add_one)
         self.transformations.append(unit_normalization)
-        #self.transformations.append(spike_normalization)
         self.transformations.append(logarithmic_scaling)
         self.transformations.append(smoothing)
-        #self.transformations.append(slow_smoothing)
-        #self.transformations.append(index_smoothing)
         self.transformations.append(sizing)
         
         # transformations to be run on test series 
         self.test_transformations = []
         self.test_transformations.append(add_one)
         self.test_transformations.append(unit_normalization)
-        #self.test_transformations.append(spike_normalization)
         self.test_transformations.append(logarithmic_scaling)
         self.test_transformations.append(smoothing)
        
