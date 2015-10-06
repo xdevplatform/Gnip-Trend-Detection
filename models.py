@@ -52,10 +52,10 @@ class WeightedDataTemplates(object):
         else:
             self.Lambda = 1
 
-        if "logger" in config:
-            self.logger = config["logger"]
-        else:
-            self.logger = logging.getLogger("default_template_logger")
+        #if "logger" in config:
+        #    self.logger = config["logger"]
+        #else:
+        #    self.logger = logging.getLogger("default_template_logger")
 
         from library import Library
         if "library_file_name" in config:
@@ -92,13 +92,13 @@ class WeightedDataTemplates(object):
         self.trend_weight = float(0)
         for reference_series in self.library.trends:  
             weight = self.weight(reference_series,test_series,check_for_self) 
-            self.logger.debug("trend wt: {}".format(weight))
+            #self.logger.debug("trend wt: {}".format(weight))
             self.trend_weight += weight
         
         self.non_trend_weight = float(0)
         for reference_series in self.library.non_trends: 
             weight = self.weight(reference_series,test_series,check_for_self)
-            self.logger.debug("non trend wt: {}".format(weight))
+            #self.logger.debug("non trend wt: {}".format(weight))
             self.non_trend_weight += weight
 
     def get_result(self):
@@ -130,7 +130,7 @@ class WeightedDataTemplates(object):
             #self.logger.debug("Distance: {}".format(d))
             if d < min_distance:
                 min_distance = d
-        self.logger.debug("min d: {}".format(min_distance))
+        #self.logger.debug("min d: {}".format(min_distance))
         return math.exp(-float(min_distance) * self.Lambda )
 
     def set_up_distance_measures(self, config): 

@@ -34,7 +34,6 @@ def plot(plotable_data,config):
     ax1 = fig.add_subplot(111)
     if use_x_var:
         ax1.plot(tbs,cts,'k-') 
-        #ax1.plot(tbs,cts,'b.',tbs,cts,'k-') 
     else:
         ax1.plot(cts,'bo',cts,'k-') 
     
@@ -42,7 +41,10 @@ def plot(plotable_data,config):
     ax1.set_ylabel("counts",color='b',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
-        tl.set_color('b')
+        if use_x_var:
+            tl.set_color('k')
+        else:
+            tl.set_color('b')
         tl.set_fontsize(10)
     plt.locator_params(axis = 'y', nbins = 4)
     ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))

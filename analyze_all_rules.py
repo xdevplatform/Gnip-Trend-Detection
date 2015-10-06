@@ -180,32 +180,30 @@ if args.do_rebin:
 
 if args.do_analysis:
    
+    pool = mp.Pool()
     # get and configure the model
     import models
     model = getattr(models,model_name)(config=model_config) 
 
     # iterate over rule data and analyze point-by-point
-    process_list = []
+    results_list = {}
     data = pickle.load(open(args.rebinned_file_name)) 
     for rule, rule_data in data.items():
         if len(rule_data) == 0:
             continue
-        logr.info(u"analyzing rule: {}".format(rule))
-        p = mp.Process(target=analyzer,args=(rule_data,model,rule,queue)) 
-        p.start()
-        process_list.append(p) 
-        time.sleep(2)
+        logr.info(u"submitting analysis for rule: {}".format(rule))
+        results_list[rule] = pool.apply_async(analyzer,(rule_data,model)) 
 
     # get and save data
     saved_data = {}
-    rule_counter = len(process_list)
-    while rule_counter != 0:
-        saved_data.update([queue.get()])  
-        rule_counter -= 1
-
-    # allow processes to gently die
-    for p in process_list:
-        p.join() 
+    while len(results_list) != 0:
+        time.sleep(0.1)
+        for rule,result in results_list.items():
+            if result.ready():
+                saved_data.update([(rule,result.get())])  
+                del results_list[rule]
+                logr.info("{} results unfinished".format(len(results_list)))
+                break
 
     pickle.dump(saved_data,open(args.analyzed_file_name,"w"))
 
