@@ -20,10 +20,35 @@ def plot(plotable_data,config):
         data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data if tup[0].start_time > start_tm and tup[0].stop_time < stop_tm ]
     else:
         data = [(tup[0].start_time,tup[1],tup[2]) for tup in plotable_data] 
-    tbs = [tup[0] for tup in data]
-    cts = [tup[1] for tup in data]
-    eta = [tup[2] for tup in data]
+    
+    if "rebin_factor" not in config or int(config["rebin_factor"]) == 1:
+        tbs = [tup[0] for tup in data]
+        cts = [tup[1] for tup in data]
+        eta = [tup[2] for tup in data]
+    else:
+        tbs = []
+        cts = []
+        eta = []
+        tbs_tmp = None
+        cts_tmp = 0
+        eta_tmp = 0
+        counter = 0
+        for tbs_i,cts_i,eta_i in data:
+            tbs_tmp = tbs_i
+            cts_tmp += cts_i
+            eta_tmp += eta_i
+            counter += 1
+            if counter == int(config["rebin_factor"]):
+                counter = 0
+                tbs.append(tbs_tmp)
+                cts.append(cts_tmp)
+                eta.append(eta_tmp/float(config["rebin_factor"]))
+                tbs_tmp = None
+                cts_tmp = 0
+                eta_tmp = 0
+
     if cts == []:
+        print("'cts' list is empty") 
         return -1
     max_cts = max(cts)
     min_cts = min(cts)
@@ -72,7 +97,9 @@ def plot(plotable_data,config):
             tl.set_color('r')
             tl.set_fontsize(10)
 
-    plt.savefig(config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])) 
+    plot_file_name = config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])
+    print(plot_file_name)
+    plt.savefig(plot_file_name) 
     plt.close()
 
 
