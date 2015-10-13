@@ -20,7 +20,8 @@ def analyze(generator, model, rule_name = None, return_queue = None, logr = None
         time_bucket = line[0]
         count = line[1]
         model.update(count=count, time_bucket=time_bucket)
-        plotable_data.append( (time_bucket, count, model.get_result()) )
+        result = float( "{0:.02f}".format( model.get_result() ) )
+        plotable_data.append( (time_bucket, count, result) )
         if logr is not None:
             logr.debug("{0} {1:>8} {2:.2f}".format(time_bucket, str(count), model.get_result()))  
     if return_queue is not None:

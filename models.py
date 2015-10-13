@@ -55,13 +55,16 @@ class WeightedDataTemplates(object):
         #if "logger" in config:
         #    self.logger = config["logger"]
         #else:
-        #    self.logger = logging.getLogger("default_template_logger")
+        #    self.logger = logging.getLogger("default_template_logger") 
+        #self.logger = logr
 
         from library import Library
         if "library_file_name" in config:
             self.library = pickle.load(open(config["library_file_name"]))
         else:
             self.library = Library(config={})
+
+        self.config = config
 
     def update(self, **kwargs):
         """
@@ -85,7 +88,10 @@ class WeightedDataTemplates(object):
             return
 
         # transform a "reference_length"-sized sub-series
-        transformed_series = self.library.transform_input(self.total_series[-self.reference_length:],is_test_series=True)
+        #transformed_series = self.total_series[-self.reference_length:]
+        #for transformation in self.library.test_transformations:
+        #    transformed_series = transformation(transformed_series,self.config) 
+        transformed_series = self.library.transform_input(self.total_series[-self.reference_length:],is_test_series=True,config=self.config)
         # get correctly-sized test series
         test_series =  transformed_series[-self.series_length:]
 

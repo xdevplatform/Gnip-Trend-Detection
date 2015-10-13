@@ -65,7 +65,7 @@ class Library(object):
         else:
             self.non_trends.append( TopicSeries(series) )
 
-    def transform_input(self,series,is_test_series):
+    def transform_input(self,series,is_test_series,config=None):
         """
         Run series sequentially through the functions 
         in the transformations list
@@ -76,7 +76,10 @@ class Library(object):
             transformations = self.test_transformations
         
         for transformation in transformations:
-            series = transformation(series,self.config)
+            if config is not None:
+                series = transformation(series,config) 
+            else:
+                series = transformation(series,self.config)
 
         return series
 
@@ -106,15 +109,9 @@ def unit_normalization(series, config):
     lower_idx = -(int(config["reference_length"]) + offset)
     upper_idx = -offset
     total = sum(series[lower_idx:upper_idx])/float(reference_length)
-    #print(total)
-    #total = sum(series[-reference_length:])/float(reference_length)
     if total == 0:
         total = SMALL_NUMBER
-    new_series = []
-    for pt in series:
-        new_series.append(float(pt)/total)
-    #print(sum(new_series[-int(config["reference_length"])+offset:]))
-    return new_series
+    return [float(pt)/total for pt in series]
 
 def spike_normalization(series, config):
     alpha = float(config["alpha"])
@@ -135,9 +132,9 @@ def smoothing(series,config):
     new_series = []
     for pt in series:
         queue.append(pt)
+        new_series.append( float(sum(queue))/len(queue) )
         if len(queue) >= n_smooth:
             queue.popleft()
-        new_series.append( float(sum(queue))/len(queue) )
     return new_series
 
 def slow_smoothing(series,config): 
@@ -146,9 +143,9 @@ def slow_smoothing(series,config):
     new_series = []
     for pt in series:
         queue.append(pt)
+        new_series.append( float(sum(queue))/len(queue) )
         if len(queue) >= n_smooth:
             del queue[0]
-        new_series.append( float(sum(queue))/len(queue) )
     return new_series
 
 def index_smoothing(series,config): 

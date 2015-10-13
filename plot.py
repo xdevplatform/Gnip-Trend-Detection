@@ -61,9 +61,10 @@ def plot(plotable_data,config):
         ax1.plot(tbs,cts,'k-') 
     else:
         ax1.plot(cts,'bo',cts,'k-') 
+        ax1.set_xlim(0,len(cts))
     
     ## fancify
-    ax1.set_ylabel("counts",color='b',fontsize=10)
+    ax1.set_ylabel("counts",color='k',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
         if use_x_var:
@@ -72,12 +73,12 @@ def plot(plotable_data,config):
             tl.set_color('b')
         tl.set_fontsize(10)
     plt.locator_params(axis = 'y', nbins = 4)
-    ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
-    formatter = mdates.DateFormatter('%Y-%m-%d')
-    ax1.xaxis.set_major_formatter( formatter ) 
-    #days = mdates.DayLocator()
-    #ax1.xaxis.set_major_locator(days) 
-    fig.autofmt_xdate()
+    if use_x_var:
+        formatter = mdates.DateFormatter('%Y-%m-%d')
+        ax1.xaxis.set_major_formatter( formatter ) 
+        fig.autofmt_xdate()
+    else:
+        ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
 
     if config['plot_eta']:
         ax2 = ax1.twinx()
@@ -88,6 +89,7 @@ def plot(plotable_data,config):
             getattr(ax2,plotter)(tbs,eta,'r')
         else:
             getattr(ax2,plotter)(eta,'r')
+            ax2.set_xlim(0,len(eta))
         min_eta = 0
         if min(eta) > 0:
             min_eta = min(eta) * 0.9
@@ -98,7 +100,6 @@ def plot(plotable_data,config):
             tl.set_fontsize(10)
 
     plot_file_name = config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])
-    print(plot_file_name)
     plt.savefig(plot_file_name) 
     plt.close()
 

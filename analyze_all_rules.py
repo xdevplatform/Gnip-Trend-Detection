@@ -102,7 +102,6 @@ logr.info("rebin/analysis/plotting starting")
 # results from the distributed processes are returned to this queue
 queue = mp.Queue(queue_size)
 
-
 if args.do_rebin:
     # get input file names
     if args.input_file_base_dir is not None:
