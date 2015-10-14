@@ -4,7 +4,10 @@ import pickle
 import math
 import logging
 
+import numpy as np
 import scipy.stats.distributions as dists
+from sklearn.linear_model import LinearRegression
+from dateutil import parser
 
 """
 Classes in the module implement trend detection techniques.
@@ -15,6 +18,31 @@ For uniform interface, all classes must implement the following functions:
         required keyword arguments may differ between models
 
 """
+
+class LinearRegressionModel(object):
+    def __init__(self, config):
+        self.counts = [] 
+        self.min_points = int(config['min_points'])
+        try:
+            self.regression_window_size = int(config['regression_window_size']) 
+        except KeyError:
+            self.regression_window_size = None
+        self.regression = LinearRegression()
+
+    def update(self, **kwargs):
+        self.counts.append( kwargs['count'] )
+
+    def get_result(self):
+        if len(self.counts) < self.min_points:
+            return 0
+        if self.regression_window_size is not None:
+            y = np.array(self.counts[-self.regression_window_size:])  
+        else:
+            y = np.array(self.counts)  
+        x = range(len(y))
+        X = [[i] for i in x]
+        slope = self.regression.fit(X,y).coef_[0]
+        return slope
 
 class WeightedDataTemplates(object):
     def __init__(self, config): 
