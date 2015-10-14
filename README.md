@@ -115,8 +115,8 @@ The output PNG should be in the example directory and look like:
 
 This analysis is based on the point-by-point Poisson model, with the previous point 
 as the background expectation. You must still choose the cutoff value of *eta* (called *theta*)
-that defines the presence of a trend. It is clear that any choice for *theta* will lead to
-lots of false positive signals.
+that defines the presence of a trend. It is clear that, if you wish to flag the large
+spike as a trend, almost any choice for *theta* will lead to lots of false positives.
 
 A more robust background model can be used by changing the `mode` parameter in the `Poisson_model`
 section of the `example/config.cfg` from `lc` (last count) to `a` (average). The `period_list`
@@ -126,7 +126,7 @@ The output PNG should for this model should look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_averaged.png?raw=true) 
 
-There is much less noise in this results, but we can do better. Choose the data-derived template method
+There is less noise in this result, we can do better. Choose the data-derived template method
 in `example/config.cfg` by uncommenting `model_name=WeightedDataTemplates`. In this model, *eta* quantifies the
 extent to which the test series looks more like a set of known trending time series or like a set of
 time series known _not_ to be trending. 
@@ -140,6 +140,13 @@ smoothing procedure. Nevertheless, this model provides the most robust performan
 of additional complexity and CPU time. The ROC curve for this model looks like:
 
 ![roc](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/roc.png?raw=true)  
+
+The previous methods focus on identifying sudden increases, or spikes, in the time series.
+To identify trends characterized by constant growth over time, you can use 
+a linear regression. Choose the `LinearRegressionModel` in the config file,
+and the output PNG should look like:
+
+![roc](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_linear.png?raw=true)  
 
 
 ## Analysis Model Details
