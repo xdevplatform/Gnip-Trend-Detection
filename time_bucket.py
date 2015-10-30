@@ -27,7 +27,7 @@ class TimeBucket:
         return this_datetime > self.start_time and this_datetime < self.stop_time
     
     def __repr__(self):
-        return_str = "{} - {}".format(self.start_time.strftime(self.datetime_format),self.stop_time.strftime(self.datetime_format))
+        return_str = "'{} - {}'".format(self.start_time.strftime(self.datetime_format),self.stop_time.strftime(self.datetime_format))
         return return_str
 
     def __gt__(self, obj):

@@ -25,7 +25,7 @@ import json
 import time
 import argparse
 import ConfigParser
-import pickle
+import importlib
 import logging
 import sys 
 import os
@@ -43,21 +43,22 @@ from plot import plot as plotter
 ###
 #lvl = logging.DEBUG
 lvl = logging.INFO
-n_cpu = 24
+n_cpu = 30
 queue_size = 20000
 ###
 
 # get input, output, and config file naems from cmd-line argument parsing
 parser = argparse.ArgumentParser()
-parser.add_argument("-c",dest="config_file_name",default=None)   
-parser.add_argument("-i",dest="input_file_names",default=None,nargs="+")   
-parser.add_argument("-d",dest="input_file_base_dir",default=None)   
-parser.add_argument("-o",dest="rebinned_file_name",default="rebinned.pkl")    
-parser.add_argument("-e",dest="analyzed_file_name",default="rebinned_analyzed.pkl")
-parser.add_argument("-r",dest="do_rebin",action="store_true",default=False,help="do rebin")   
-parser.add_argument("-a",dest="do_analysis",action="store_true",default=False,help="do analysis")   
-parser.add_argument("-p",dest="do_plot",action="store_true",default=False,help="do plotting")   
-parser.add_argument("-v",dest="verbose",action="store_true",default=False)   
+parser.add_argument("-c","--config-file",dest="config_file_name",default=None)   
+parser.add_argument("-i","--input-file-names",dest="input_file_names",default=None,nargs="+")   
+parser.add_argument("-d","--input-base-dir",dest="input_file_base_dir",default=None)   
+parser.add_argument("-o","--rebinned-file-name",dest="rebinned_file_name",default="rebinned.pkl")    
+parser.add_argument("-e","--analyzed-file-name",dest="analyzed_file_name",default="rebinned_analyzed.pkl")
+parser.add_argument("-r","--do-rebin",dest="do_rebin",action="store_true",default=False,help="do rebin")   
+parser.add_argument("-a","--do-analysis",dest="do_analysis",action="store_true",default=False,help="do analysis")   
+parser.add_argument("-p","--do-plotting",dest="do_plot",action="store_true",default=False,help="do plotting")   
+parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False)   
+parser.add_argument("-s","--serializer",dest="serializer",default="pickle",help="pickle,json,etc.")   
 args = parser.parse_args()
 
 # parse config file, which contains model and rule info
@@ -83,12 +84,14 @@ else:
     else:
         plot_config["plot_eta"] = True
 
+serializer = importlib.import_module(args.serializer)
+
 if args.verbose:
     lvl = logging.DEBUG
 
 logr = logging.getLogger("analyzer")
 if logr.handlers == []:
-    fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
+    fmtr = logging.Formatter('%(asctime)s %(module)s:%(lineno)s - %(levelname)s - %(message)s') 
     hndlr = logging.StreamHandler()
     hndlr.setFormatter(fmtr)
     hndlr.setLevel(lvl)
@@ -175,7 +178,7 @@ if args.do_rebin:
         p.join() 
 
     # save the data
-    pickle.dump(data,open(args.rebinned_file_name,"w"))
+    serializer.dump(data,open(args.rebinned_file_name,"w"))
 
 if args.do_analysis:
    
@@ -186,7 +189,7 @@ if args.do_analysis:
 
     # iterate over rule data and analyze point-by-point
     results_list = {}
-    data = pickle.load(open(args.rebinned_file_name)) 
+    data = serializer.load(open(args.rebinned_file_name)) 
     for rule, rule_data in data.items():
         if len(rule_data) == 0:
             continue
@@ -204,14 +207,15 @@ if args.do_analysis:
                 logr.info("{} results unfinished".format(len(results_list)))
                 break
 
-    pickle.dump(saved_data,open(args.analyzed_file_name,"w"))
+    serializer.dump(saved_data,open(args.analyzed_file_name,"w"))
 
 if args.do_plot:
 
     # auto-generate this plotting param from re-bin params
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
+    plot_config["plot_dir"] += "{}/".format(model_name)
 
-    for rule, plotable_data in pickle.load(open(args.analyzed_file_name)).items():
+    for rule, plotable_data in serializer.load(open(args.analyzed_file_name)).items():
         if len(plotable_data) == 0:
             continue
         logr.info(u"plotting results for rule: {}".format(rule))

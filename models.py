@@ -22,7 +22,16 @@ For uniform interface, all classes must implement the following functions:
 class LinearRegressionModel(object):
     def __init__(self, config):
         self.counts = [] 
+        self.averaged_counts = []
         self.min_points = int(config['min_points'])
+        try:
+            self.averaging_window_size = int(config["averaging_window_size"]) 
+        except KeyError:
+            self.averaging_window_size = 1
+        try:
+            self.norm_by_mean = bool(config['norm_by_mean'])
+        except KeyError:
+            self.norm_by_mean = False
         try:
             self.regression_window_size = int(config['regression_window_size']) 
         except KeyError:
@@ -30,15 +39,26 @@ class LinearRegressionModel(object):
         self.regression = LinearRegression()
 
     def update(self, **kwargs):
-        self.counts.append( kwargs['count'] )
+        count = kwargs["count"]
+        self.counts.append( count )
+        
+        size = self.averaging_window_size
+        if len(self.counts) >= size:
+            self.averaged_counts.append( sum(self.counts[-size:])/float(size) ) 
+        else:
+            self.averaged_counts.append(0)
 
     def get_result(self):
-        if len(self.counts) < self.min_points:
+        """ Run a linear fit on the averaged count,
+        which will be the raw counts if not otherwise specified. """
+        if len(self.averaged_counts) < self.min_points:
             return 0
         if self.regression_window_size is not None:
-            y = np.array(self.counts[-self.regression_window_size:])  
+            y = np.array(self.averaged_counts[-self.regression_window_size:])  
         else:
-            y = np.array(self.counts)  
+            y = np.array(self.averaged_counts)  
+        if self.norm_by_mean: 
+            y = y/np.mean(y)
         x = range(len(y))
         X = [[i] for i in x]
         slope = self.regression.fit(X,y).coef_[0]

@@ -38,7 +38,7 @@ transformed into form useable by the scripts in this package.
 ## Input Data
 
 The input data can contain multiple "rules" or tags of counts, and is expected to contain data 
-for one rule and one time interval on each line:
+for one rule and one time interval on each line, in the following format:
 
 | end-timestamp | rule name | rule count | count for all rules | time interval duration in sec |
 | ------------------- | --------- | ---------- | ------------------- | ------------------------- |
@@ -46,6 +46,8 @@ for one rule and one time interval on each line:
 | 2015-01-01 00:03:25.0  | ups | 188 | 201 | 162.0 |
 |2015-01-01 00:06:40.0| ups| 191| 201| 195.0 |
 |2015-01-01 00:06:40.0| fedex| 10| 201| 195.0 |
+
+The fourth column must be present, but is ignored by the analysis code.
 
 The simplest option for getting data into the correct format is to use
 the [Gnip-Stream-Collector-Metrics](https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package. 
@@ -126,9 +128,9 @@ The output PNG should for this model should look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus_averaged.png?raw=true) 
 
-There is less noise in this result, we can do better. Choose the data-derived template method
+There is less noise in this result, but we can do better. Choose the data-derived template method
 in `example/config.cfg` by uncommenting `model_name=WeightedDataTemplates`. In this model, *eta* quantifies the
-extent to which the test series looks more like a set of known trending time series or like a set of
+extent to which the test series looks more like a set of known trending time series, or like a set of
 time series known _not_ to be trending. 
 
 The output PNG should for this model should look like:

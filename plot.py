@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import datetime
+import os
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.dates as mdates
@@ -13,7 +14,9 @@ def plot(plotable_data,config):
     """
     use_x_var = True
     if "use_x_var" in config:
-        use_x_var = bool(config["use_x_var"]) 
+        use_x_var = bool(config["use_x_var"])  
+    if "y_label" not in config:
+        config["y_label"] = "counts"
     if "start_time" in config and "stop_time" in config:
         start_tm = datetime.datetime.strptime(config["start_time"],"%Y%m%d%H%M")
         stop_tm = datetime.datetime.strptime(config["stop_time"],"%Y%m%d%H%M")
@@ -25,6 +28,7 @@ def plot(plotable_data,config):
         tbs = [tup[0] for tup in data]
         cts = [tup[1] for tup in data]
         eta = [tup[2] for tup in data]
+    # do a hacky rebin
     else:
         tbs = []
         cts = []
@@ -52,7 +56,8 @@ def plot(plotable_data,config):
         return -1
     max_cts = max(cts)
     min_cts = min(cts)
-    
+   
+    # build the plot
     fig = plt.figure()
     plt.title(config["plot_title"])
     
@@ -64,7 +69,7 @@ def plot(plotable_data,config):
         ax1.set_xlim(0,len(cts))
     
     ## fancify
-    ax1.set_ylabel("counts",color='k',fontsize=10)
+    ax1.set_ylabel(config["y_label"],color='k',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
         if use_x_var:
@@ -77,8 +82,7 @@ def plot(plotable_data,config):
         formatter = mdates.DateFormatter('%Y-%m-%d')
         ax1.xaxis.set_major_formatter( formatter ) 
         fig.autofmt_xdate()
-    else:
-        ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
+    ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
 
     if config['plot_eta']:
         ax2 = ax1.twinx()
@@ -99,6 +103,12 @@ def plot(plotable_data,config):
             tl.set_color('r')
             tl.set_fontsize(10)
 
+    if not config["plot_eta"]:
+        config["plot_file_name"] += "_no_eta"
+    try:
+        os.makedirs(config["plot_dir"]) 
+    except OSError:
+        pass
     plot_file_name = config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])
     plt.savefig(plot_file_name) 
     plt.close()
@@ -108,7 +118,7 @@ if __name__ == "__main__":
     
     import argparse
     import ConfigParser
-    import pickle
+    import importlib
     import logging
     
     import models
@@ -123,11 +133,12 @@ if __name__ == "__main__":
         logr.addHandler(hndlr) 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i",dest="input_file_name",default="output.pkl") 
-    parser.add_argument("-c",dest="config_file_name",default="config.cfg",help="get configuration from this file")
-    parser.add_argument("-t",dest="plot_title",default=None) 
-    parser.add_argument("-d",dest="analyzed_data_file",default=None) 
-    parser.add_argument("-v",dest="verbose",action="store_true",default=False) 
+    parser.add_argument("-i","--input-file",dest="input_file_name",default="output.pkl") 
+    parser.add_argument("-c","--config-file",dest="config_file_name",default="config.cfg",help="get configuration from this file")
+    parser.add_argument("-t","--plot-title",dest="plot_title",default=None) 
+    parser.add_argument("-d","--analyzed-data-file",dest="analyzed_data_file",default=None) 
+    parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False) 
+    parser.add_argument("-s","--serializer",dest="serializer",default="pickle") 
     args = parser.parse_args()
 
     plot_config = {}
@@ -172,9 +183,9 @@ if __name__ == "__main__":
 
     model = getattr(models,model_name)(config=model_config) 
     if args.analyzed_data_file is not None:
-        plotable_data = pickle.load(open(args.analyzed_data_file))[rule_name]
+        plotable_data = serializer.load(open(args.analyzed_data_file))[rule_name]
     else:
-        generator = pickle.load(open(args.input_file_name))[rule_name]
+        generator = serializer.load(open(args.input_file_name))[rule_name]
         plotable_data = analyzer(generator,model,None,None,logr)
     
     plot(plotable_data,plot_config)

@@ -29,7 +29,7 @@ import datetime
 import argparse
 import collections
 import operator
-import pickle
+import importlib
 import logging
 import fnmatch
 import os
@@ -124,26 +124,26 @@ def rebin(**kwargs):
         logr.debug("Finished generating grid for {}".format(kwargs["rule_name"]))
 
         # add data to a dictionary with keys mapped to the grid indicies
-        output_data = collections.defaultdict(int)
+        output_data = collections.defaultdict(float)
         for input_tb,input_count in input_data_sorted:
             logr.debug("input. TB: {}, count: {}".format(input_tb,input_count))
            
             for grid_tb in grid:
                 if input_tb in grid_tb:
                     idx = grid.index(grid_tb) 
-                    output_data[idx] += int(input_count)
+                    output_data[idx] += float(input_count)
                     break
                 elif input_tb.intersects(grid_tb):
                     # assign partial count of input_tb to grid_tb
                     idx_lower = grid.index(grid_tb) 
                     frac_lower = input_tb.get_fraction_overlapped_by(grid_tb)  
-                    output_data[idx_lower] += int(int(input_count) * frac_lower)
+                    output_data[idx_lower] += (float(input_count) * frac_lower)
                     
                     try:
                         idx = idx_lower + 1
                         frac = input_tb.get_fraction_overlapped_by(grid[idx])  
                         while frac > 0:
-                            output_data[idx] += int(frac * int(input_count))
+                            output_data[idx] += (frac * float(input_count))
                             idx += 1
                             frac = input_tb.get_fraction_overlapped_by(grid[idx])   
                     except IndexError:
@@ -201,12 +201,13 @@ if __name__ == "__main__":
         logr.addHandler(hndlr) 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c",dest="config_file_name",default=None)   
-    parser.add_argument("-i",dest="input_file_names",nargs="+",default=[])    
-    parser.add_argument("-d",dest="input_file_base_dir",default=None)   
-    parser.add_argument("-p",dest="input_file_postfix",default="counts")    
-    parser.add_argument("-o",dest="output_file_name",default="output.pkl")    
-    parser.add_argument("-v",dest="verbose",action="store_true",default=False)    
+    parser.add_argument("-c","--config-file",dest="config_file_name",default=None)   
+    parser.add_argument("-i","--input-file",dest="input_file_names",nargs="+",default=[])    
+    parser.add_argument("-d","--input-file-base-dir",dest="input_file_base_dir",default=None)   
+    parser.add_argument("-p","--input-file-postfix",dest="input_file_postfix",default="counts")    
+    parser.add_argument("-o","--output-file",dest="output_file_name",default="output.pkl")    
+    parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False)    
+    parser.add_argument("-s","--serializer",dest="serializer",default="pickle")    
     args = parser.parse_args()
 
     # parse config file
@@ -232,9 +233,11 @@ if __name__ == "__main__":
     if args.input_file_names is []:
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
-  
+ 
+    serializer = importlib.import_module(arg.serializer)
+
     if args.verbose:
         data = rebin(input_file_names=args.input_file_names,logger_name="rebin",**kwargs)
     else:
         data = rebin(input_file_names=args.input_file_names,**kwargs)
-    pickle.dump({kwargs["rule_name"]:data},open(args.output_file_name,"w"))
+    serializer.dump({kwargs["rule_name"]:data},open(args.output_file_name,"w"))
