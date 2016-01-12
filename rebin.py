@@ -234,7 +234,7 @@ if __name__ == "__main__":
         sys.stderr.write("Input file(s) must be specified. Exiting.")
         sys.exit(1)
  
-    serializer = importlib.import_module(arg.serializer)
+    serializer = importlib.import_module(args.serializer)
 
     if args.verbose:
         data = rebin(input_file_names=args.input_file_names,logger_name="rebin",**kwargs)

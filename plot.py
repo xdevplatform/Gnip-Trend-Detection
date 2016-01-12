@@ -181,6 +181,7 @@ if __name__ == "__main__":
     if args.verbose is True:
         logr.setLevel(logging.DEBUG)
 
+    serializer = importlib.import_module(args.serializer)
     model = getattr(models,model_name)(config=model_config) 
     if args.analyzed_data_file is not None:
         plotable_data = serializer.load(open(args.analyzed_data_file))[rule_name]
