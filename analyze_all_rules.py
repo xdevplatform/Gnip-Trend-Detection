@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/env python 
 
 """
 
@@ -34,9 +34,9 @@ import operator
 import fnmatch
 import multiprocessing as mp
 
-from rebin import rebin
-from analyze import analyze as analyzer
-from plot import plot as plotter
+from gnip_trend_detection.rebin import rebin
+from gnip_trend_detection.analyze import analyze as analyzer
+from gnip_trend_detection.plot import plot as plotter
 
 # a few internal configuration setting
 

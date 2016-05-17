@@ -34,6 +34,8 @@ transformed into form useable by the scripts in this package.
 ## Requirements
 
 * scipy
+* sklearn
+* matplotlib
 
 ## Input Data
 
@@ -71,6 +73,13 @@ the `models.py` file. Models return a figure-of-merit for each point.
 * Plotting - The original time series is plotted and overlaid with a plot of the *eta* values. 
 This is performed by `plot.py`. 
 
+## Installation
+
+This scripts and library in the repository can be installed with `setuptools`. Assuming 
+a virtual environment, the most basic workflow is:
+
+`python setup.py install`
+
 ## Configuration
 
 All the scripts mentioned in the previous section assume the presence of a configuration
@@ -84,32 +93,27 @@ A full example has been provided in the `example` directory. In it, you will fin
 formatted time series data for mentions of the "#scotus" hashtag in August-September 2014.
 This file is `example/scotus.txt`. In the same directory, there is a configuration file, 
 which specifies what the software will do, including the size of the final time buckets 
-and the trend detection technique and parameter values.
-
-NOTE: be sure that your current directory is in your Python path. For example, run:
-
-``export PYTHONPATH=`pwd` `` 
-
-from the repository directory.
+and the trend detection technique and parameter values. This example assumes that you
+have installed the package, but are working from the repo directory.
 
 The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
 Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
 
-`./rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
+`rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data.
 
 Next, we will run the analysis script, which when run alone, should return nothing.
 Remember, all the modeling specification is in the config file.
 
-`./analyze.py -i example/scotus.pkl -c example/config.cfg`
+`analyze.py -i example/scotus.pkl -c example/config.cfg`
 
 Use the `-v` option to see the raw data, including the results for *eta*. 
 
 To view results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
 
-`./plot.py -i example/scotus.pkl -c example/config.cfg` 
+`plot.py -i example/scotus.pkl -c example/config.cfg` 
 
 The output PNG should be in the example directory and look like:
 

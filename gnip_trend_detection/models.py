@@ -7,7 +7,6 @@ import logging
 import numpy as np
 import scipy.stats.distributions as dists
 from sklearn.linear_model import LinearRegression
-from dateutil import parser
 
 """
 Classes in the module implement trend detection techniques.
@@ -106,11 +105,11 @@ class WeightedDataTemplates(object):
         #    self.logger = logging.getLogger("default_template_logger") 
         #self.logger = logr
 
-        from library import Library
+        import library
         if "library_file_name" in config:
-            self.library = pickle.load(open(config["library_file_name"]))
+            self.library = pickle.load(open(config["library_file_name"],'rb'))
         else:
-            self.library = Library(config={})
+            self.library = library.Library(config={})
 
         self.config = config
 

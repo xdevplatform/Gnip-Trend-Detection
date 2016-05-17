@@ -6,4 +6,7 @@
 *.csv
 *.swp
 *.cfg
+build
+dist
+*.egg-info
 libraries/
