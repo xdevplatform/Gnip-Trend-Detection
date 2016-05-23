@@ -49,7 +49,7 @@ def rebin(**kwargs):
         logr.setLevel(lvl)
 
     if "rule_counter" not in kwargs:
-        kwargs["rule_counter"] = 1
+        kwargs["rule_counter"] = 0
 
     try:
         logr.info(u"rebin.py is processing rule {}: {}".format(kwargs["rule_counter"],kwargs["rule_name"])) 
