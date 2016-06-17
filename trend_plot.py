@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
+import sys
 import argparse
 import ConfigParser
 import importlib
 import logging
+import csv
 
 from gnip_trend_detection import models
 from gnip_trend_detection.analysis import analyze
 from gnip_trend_detection.analysis import plot
 
 logr = logging.getLogger("analyzer")
-#logr.setLevel(logging.DEBUG)
 if logr.handlers == []:
     fmtr = logging.Formatter('%(asctime)s %(name)s - %(levelname)s - %(message)s') 
     hndlr = logging.StreamHandler()
@@ -18,12 +19,10 @@ if logr.handlers == []:
     logr.addHandler(hndlr) 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i","--input-file",dest="input_file_name",default="output.pkl") 
+parser.add_argument("-i","--input-file",dest="input_file_name",default=None) 
 parser.add_argument("-c","--config-file",dest="config_file_name",default="config.cfg",help="get configuration from this file")
 parser.add_argument("-t","--plot-title",dest="plot_title",default=None) 
-parser.add_argument("-d","--analyzed-data-file",dest="analyzed_data_file",default=None) 
 parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False) 
-parser.add_argument("-s","--serializer",dest="serializer",default="pickle") 
 args = parser.parse_args()
 
 plot_config = {}
@@ -39,7 +38,7 @@ else:
     plot_config["plot_dir"] = "."
 rebin_items = config.items("rebin")
 rebin_config = dict(rebin_items)
-rule_name = rebin_config["rule_name"]
+rule_name = rebin_config["counter_name"]
 if plot_config["plot_title"] == "":
     plot_config["plot_title"] = rule_name
 if plot_config["plot_file_name"] == "":
@@ -66,12 +65,9 @@ if args.plot_title is not None:
 if args.verbose is True:
     logr.setLevel(logging.DEBUG)
 
-serializer = importlib.import_module(args.serializer)
-model = getattr(models,model_name)(config=model_config) 
-if args.analyzed_data_file is not None:
-    plotable_data = serializer.load(open(args.analyzed_data_file))[rule_name]
+if args.input_file_name is None:
+    input_generator = csv.reader(sys.stdin)
 else:
-    generator = serializer.load(open(args.input_file_name))[rule_name]
-    plotable_data = analyze(generator,model,None,None,logr)
+    input_generator = csv.reader(open(args.input_file_name))
 
-plot(plotable_data,plot_config)
+plot(input_generator,plot_config)

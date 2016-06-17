@@ -3,6 +3,7 @@ import sys
 import pickle
 import math
 import logging
+from dateutil.parser import parse
 
 import numpy as np
 import scipy.stats.distributions as dists
@@ -238,7 +239,7 @@ class Poisson(object):
         current_count = kwargs["count"]
 
         #this must always exist
-        tb = kwargs["time_bucket"]
+        start_time = parse(kwargs['interval_start_time'])
 
         #manage last (previous) count
         self.last_count = self.current_count
@@ -251,9 +252,9 @@ class Poisson(object):
             self.mean = self.last_count
         
         if self.mode == "a": 
-            # create a ':'-separated string of the tb.start_time attributes, as specified by self.period_list 
+            # create a ':'-separated string of the start_time attributes, as specified by self.period_list 
             # this defines the key over which counts will be averaged
-            period = ":".join([str(getattr(tb.start_time,p)) for p in self.period_list])
+            period = ":".join([str(getattr(start_time,p)) for p in self.period_list])
             
             if "num" in self.periodic_data[period]:
                 self.periodic_data[period]["num"] += current_count 

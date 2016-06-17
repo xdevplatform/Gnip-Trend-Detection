@@ -9,5 +9,5 @@ setup(name='gnip_trend_detection'
         ,license='MIT'
         ,packages=find_packages()
         ,install_requires=['scipy','sklearn','matplotlib'] 
-        ,scripts=['analyze.py','rebin.py','plot.py','analyze_all_rules.py']  
+        ,scripts=['trend_analyze.py','trend_rebin.py','trend_plot.py','analyze_all_rules.py']  
         )
