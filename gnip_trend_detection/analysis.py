@@ -4,100 +4,97 @@ import collections
 import operator
 import importlib
 import logging
-import fnmatch
 import os
-import traceback
+import datetime_truncate 
 from math import log10, floor
 from dateutil.parser import parse as dt_parser
 
-import matplotlib as mpl
-mpl.use('Agg')
+#import matplotlib as mpl
+#mpl.use('Agg')
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 from time_bucket import TimeBucket
 import models
 
-def rebin(input_generator,counter,**kwargs):
+def rebin(input_generator,
+        start_time = str(datetime.datetime(1970,01,01)),
+        stop_time = str(datetime.datetime(2020,01,01)),
+        binning_unit = 'hours',
+        n_binning_unit = 1,
+        **kwargs
+        ):
     """
     This function must be passed the following positional argument:
         input_generator
-        counter 
     Optional keyword arguments are:
         binning_unit
         n_binning_unit
         stop_time
         start_time
-        return_queue
 
     The 'input_generator' object must yield tuples like:
-        [interval_start_time], [interval_duration_in_sec], [interval_count]
+        [interval start time], [interval duration in sec], [interval count]
 
     The function return a list of tuples like:
-        [new_interval_start_time], [new_interval_duration_in_sec], [new_interval_count]
+        [new interval start time], [new interval duration in sec], [new interval count]
     """
     
     logger = logging.getLogger("rebin")
-    if logger.handlers == []:
-        fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
-        hndlr = logging.StreamHandler()
-        hndlr.setFormatter(fmtr)
-        logger.addHandler(hndlr) 
 
-    if 'start_time' in kwargs:
-        start_time = dt_parser(kwargs["start_time"])  
-    else:
-        start_time = datetime.datetime(1970,01,01)
-    if 'stop_time' in kwargs:
-        stop_time = dt_parser(kwargs["stop_time"]) 
-    else:
-        stop_time = datetime.datetime(2020,01,01)
-    if 'binning_unit' not in kwargs:
-        kwargs['binning_unit'] = 'hours'
-    if 'n_binning_unit' not in kwargs:
-        kwargs['n_binning_unit'] = 1
+    start_time = dt_parser(start_time)  
+    stop_time = dt_parser(stop_time)  
+
+    # these are just for keeping track of what range of date/times we observe in the data
+    max_stop_time = datetime.datetime(1970,1,1)
+    min_start_time = datetime.datetime(2020,1,1)
 
     input_data = []
 
     # put the data into a list of (TimeBucket, count) tuples
     for line in input_generator:
-        if line[1].strip().rstrip() != counter.strip().rstrip(): 
+            
+        this_start_time = dt_parser(line[0])  
+        dt = datetime.timedelta(seconds=int(float(line[1])))
+        this_stop_time = this_start_time + dt
+       
+        if this_stop_time > stop_time:
             continue
-        else:
-            logger.debug(line)
-            
-            this_stop_time = dt_parser(line[0])  
-            dt = datetime.timedelta(seconds=int(float(line[4])))
-            this_start_time = this_stop_time - dt
-            
-            if this_stop_time > stop_time:
-                continue
-            if this_start_time < start_time:
-                continue
-            time_bucket = TimeBucket(this_start_time, this_stop_time)  
-            
-            count = line[2]
-            input_data.append((time_bucket, count)) 
+        if this_start_time < start_time:
+            continue
+        time_bucket = TimeBucket(this_start_time, this_stop_time)  
+        
+        count = line[2]
+        input_data.append((time_bucket, count)) 
+        
+        if this_stop_time > max_stop_time:
+            max_stop_time = this_stop_time
+        if this_start_time < min_start_time:
+            min_start_time = this_start_time
 
-    logger.debug("Completed reading from files for {}".format(counter))
+    #logger.debug("Completed reading from files for {}".format(counter_name))
     input_data_sorted = sorted(input_data)
+    #logger.debug("Completed sorting data for {}".format(counter_name))
 
     # make a grid with appropriate bin size
-    grid_dt = datetime.timedelta(**{kwargs["binning_unit"]:int(kwargs["n_binning_unit"])})
-    tb_stop_time = start_time + grid_dt
-    tb = TimeBucket(start_time,tb_stop_time)
+    grid_start_time = datetime_truncate.truncate(min_start_time,binning_unit.rstrip('s'))
+    grid_stop_time = datetime_truncate.truncate(max_stop_time,binning_unit.rstrip('s'))
+    grid_dt = datetime.timedelta(**{binning_unit:int(n_binning_unit)})
+
+    tb_stop_time = grid_start_time + grid_dt
+    tb = TimeBucket(grid_start_time,tb_stop_time)
 
     # make list of TimeBuckets for bins
     grid = []
-    while tb.stop_time <= stop_time:
-        logger.debug("{}".format(tb))
+    while tb.stop_time <= grid_stop_time:
+        #logger.debug("{}".format(tb))
         grid.append(tb)
         tb_start_time = tb.stop_time
         tb_stop_time = tb_start_time + grid_dt
         tb = TimeBucket(tb_start_time,tb_stop_time) 
     grid.append(tb)
 
-    logger.debug("Finished generating grid for {}".format(counter))
+    #logger.debug("Finished generating grid for {}".format(counter_name))
 
     # add data to a dictionary with keys mapped to the grid indicies
     output_data = collections.defaultdict(float)
@@ -129,7 +126,7 @@ def rebin(input_generator,counter,**kwargs):
             else:
                 pass
 
-    logger.debug("Completed rebin distribution for {}".format(counter)) 
+    #logger.debug("Completed rebin distribution for {}".format(counter_name)) 
     
     # put data back into a sorted list of tuples
     sorted_output_data = []
@@ -146,34 +143,26 @@ def rebin(input_generator,counter,**kwargs):
         else:
             count = 0
         if count != 0 or prev_count != 0:
-            sorted_output_data.append((dt.start_time,dt.size().seconds,count))
+
+            if count > 0:
+                trimmed_count = round(count, -int(floor(log10(count)))+1) 
+            else:
+                trimmed_count = 0
+            sorted_output_data.append((str(dt.start_time),dt.size().seconds,trimmed_count)) 
+        
         prev_count = count
     sorted_output_data = sorted_output_data[:last_non_zero_ct_idx+1]
     
-    if "return_queue" in kwargs:
-        # for use with multiprocessing
-        logger.debug("adding {} key to dict with value {}".format(counter,sorted_output_data)) 
-        kwargs["return_queue"].put_nowait((counter, sorted_output_data))
-        logger.debug("added to return queue for {}".format(counter))
-    else:
-        # return the data structure
-        return sorted_output_data
+    # return the data structure
+    return sorted_output_data
     
-    #except ValueError, e:
-    #    logger.error(traceback.print_exc())
-
-    #except Exception, e:
-    #    logger.error(traceback.print_exc())
-
-def analyze(generator, model, counter_name = None, return_queue = None): 
+def analyze(generator, model): 
     """
     This function acts on CSV data for a single counter.
     It loops over the items generated by the first argument.
     Each item is expected to be a tuple of: 
         [interval_start_time] [interval_duration_in_sec] [interval_count] 
     Each count is used to update the model, and the model result is added to the return list. 
-
-    The arguments 'counter_name' and 'return_queue' are only for use with a multiprocessing queue.
     """
     
     logger = logging.getLogger("analyze") 
@@ -185,7 +174,7 @@ def analyze(generator, model, counter_name = None, return_queue = None):
 
     output_data = [] 
     for line in generator:
-        time_interval_start = line[0]
+        time_interval_start = dt_parser(line[0])
         time_interval_duration = line[1]
         count = float(line[2])
         
@@ -202,11 +191,8 @@ def analyze(generator, model, counter_name = None, return_queue = None):
         else:
             trimmed_result = 0
         
-        output_data.append( (time_interval_start, count, trimmed_result) )
+        output_data.append( (str(time_interval_start), count, trimmed_result) )
         logger.debug("{0} {1:>8} {2}".format(time_interval_start, trimmed_count, trimmed_result))  
-    
-    if return_queue is not None:
-        return_queue.put_nowait((counter_name,output_data))
     
     return output_data
 
@@ -231,7 +217,7 @@ def plot(input_generator,config):
         tbs = [tup[0] for tup in data]
         cts = [tup[1] for tup in data]
         eta = [tup[2] for tup in data]
-    # do a hacky rebin
+    # do a hacky rebin, just for plotting
     else:
         tbs = []
         cts = []
@@ -262,23 +248,24 @@ def plot(input_generator,config):
    
     # build the plot
     fig = plt.figure()
-    plt.title(config["plot_title"])
+    plt.title(u"{}".format(config["plot_title"]))
     
     ax1 = fig.add_subplot(111)
     if use_x_var:
         ax1.plot(tbs,cts,'k-') 
     else:
-        ax1.plot(cts,'bo',cts,'k-') 
+        ax1.plot(cts,'k-') 
         ax1.set_xlim(0,len(cts))
     
     ## fancify
-    ax1.set_ylabel(config["y_label"],color='b',fontsize=10)
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
         if use_x_var:
             tl.set_color('k')
+            ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
         else:
             tl.set_color('b')
+            ax1.set_ylabel(config["y_label"],color='b',fontsize=12)
         tl.set_fontsize(10)
     plt.locator_params(axis = 'y', nbins = 4)
     if use_x_var:
@@ -301,7 +288,7 @@ def plot(input_generator,config):
         if min(eta) > 0:
             min_eta = min(eta) * 0.9
         ax2.set_ylim(min_eta, max(eta)*1.1)
-        ax2.set_ylabel("eta",color='r',fontsize=10)
+        ax2.set_ylabel("eta",color='r',fontsize=12)
         for tl in ax2.get_yticklabels():
             tl.set_color('r')
             tl.set_fontsize(10)
@@ -312,7 +299,7 @@ def plot(input_generator,config):
         os.makedirs(config["plot_dir"]) 
     except OSError:
         pass
-    plot_file_name = config["plot_dir"] + "/{}.{}".format(config["plot_file_name"],config["plot_file_extension"])
+    plot_file_name = "{}/{}.{}".format(config["plot_dir"].rstrip('/'), config["plot_file_name"],config["plot_file_extension"])
     plt.savefig(plot_file_name) 
     plt.close()
 

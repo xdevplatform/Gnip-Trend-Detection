@@ -9,28 +9,30 @@ import sys
 import csv
 
 from gnip_trend_detection.analysis import rebin
+from gnip_trend_detection import utils
 
 """
 The script reads in CSV data in the format: 
-    [start_time_stamp],[counter],[count],-1,[interval_duration_in_sec] 
+    start_time_stamp,interval_duration_in_sec,count[,counter name]
 Data are read from stdin or a file. 
 
 Inputs are:
     input file name(s)
-    rule name
+    counter name
     start time
     stop time
     bin size and unit
     output file name
 
 Output is a CSV with the following format:
-    [start_time_stamp],[interval_duration_in_sec],[counter],[count]
+    start_time_stamp,interval_duration_in_sec,count[,counter name]
 
 """
    
 # set up a logger
 logger = logging.getLogger("rebin")
 logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.DEBUG)
 if logger.handlers == []:
     fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
     hndlr = logging.StreamHandler()
@@ -62,6 +64,7 @@ if len(args.input_file_names) != 0:
 else:
     input_generator = csv.reader(sys.stdin)
 
+counter_name = None
 # parse config file
 if ( args.config_file_name is not None and not os.path.exists(args.config_file_name) ) or os.path.exists("config.cfg"): 
     if args.config_file_name is None and os.path.exists("config.cfg"):
@@ -72,15 +75,23 @@ if ( args.config_file_name is not None and not os.path.exists(args.config_file_n
     config.read(args.config_file_name)
     rebin_config = config.items("rebin") 
     kwargs = dict(rebin_config) 
-    counter = kwargs['counter_name']
+    if 'counter_name' in kwargs:
+        counter_name = kwargs['counter_name']
 else:
     kwargs = {}
 
 if args.counter_name is not None:
-    counter = args.counter_name
+    counter_name = args.counter_name
+
+if counter_name is not None:
+    try:
+        input_generator = [ item for item in input_generator if utils.is_same(item[3],counter_name) ] 
+    except IndexError:
+        sys.stderr.write('Input CSV does not contain a fourth field; cannot parse for counter name.') 
+        sys.exit(1)
 
 # do the rebin
-data = rebin(input_generator, counter, **kwargs)
+data = rebin(input_generator, **kwargs)
 
 # do output
 if args.output_file_name is not None:

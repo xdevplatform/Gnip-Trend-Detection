@@ -8,6 +8,12 @@ setup(name='gnip_trend_detection'
         ,email='jeffakolb@gmail.com'
         ,license='MIT'
         ,packages=find_packages()
-        ,install_requires=['scipy','sklearn','matplotlib'] 
-        ,scripts=['trend_analyze.py','trend_rebin.py','trend_plot.py','analyze_all_rules.py']  
+        ,install_requires=['scipy','sklearn','matplotlib','datetime_truncate'] 
+        ,scripts=['trend_analyze.py',
+            'trend_rebin.py',
+            'trend_plot.py',
+            'trend_analyze_many.py',
+            'time_series_correlations.py',
+            'trend_detector.py',
+            ]  
         )

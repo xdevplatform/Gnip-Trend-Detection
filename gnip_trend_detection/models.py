@@ -1,4 +1,5 @@
 import collections
+import datetime
 import sys
 import pickle
 import math
@@ -239,7 +240,12 @@ class Poisson(object):
         current_count = kwargs["count"]
 
         #this must always exist
-        start_time = parse(kwargs['interval_start_time'])
+        if isinstance(kwargs['interval_start_time'],datetime.datetime):
+            start_time = kwargs['interval_start_time'] 
+        elif isinstance(kwargs['interval_start_time'],str):
+            start_time = parse(kwargs['interval_start_time'])
+        else:
+            raise TypeError("'interval_start_time' kw arg to update method must be 'str' or 'datetime'")
 
         #manage last (previous) count
         self.last_count = self.current_count

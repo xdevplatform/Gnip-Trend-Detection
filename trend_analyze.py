@@ -44,7 +44,7 @@ else:
     generator = csv.reader(sys.stdin)
 
 # do the analysis
-plotable_data = analyze(generator,model,None,None)
+plotable_data = analyze(generator,model)
 
 # output
 if args.analyzed_data_file is not None:

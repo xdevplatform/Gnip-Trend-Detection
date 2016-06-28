@@ -22,6 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input-file",dest="input_file_name",default=None) 
 parser.add_argument("-c","--config-file",dest="config_file_name",default="config.cfg",help="get configuration from this file")
 parser.add_argument("-t","--plot-title",dest="plot_title",default=None) 
+parser.add_argument("-o","--output_file_name",dest="output_file_name",default=None) 
 parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False) 
 args = parser.parse_args()
 
@@ -36,13 +37,22 @@ if config.has_section("plot"):
 else:
     plot_config["plot_title"] = "output"
     plot_config["plot_dir"] = "."
+
 rebin_items = config.items("rebin")
 rebin_config = dict(rebin_items)
-rule_name = rebin_config["counter_name"]
-if plot_config["plot_title"] == "":
-    plot_config["plot_title"] = rule_name
-if plot_config["plot_file_name"] == "":
-    plot_config["plot_file_name"] = rule_name
+if 'counter_name' in rebin_config:
+    if plot_config["plot_title"] == "":
+        plot_config["plot_title"] = rebin_config["counter_name"]
+    if plot_config["plot_file_name"] == "":
+        plot_config["plot_file_name"] = rebin_config["counter_name"]
+if args.plot_title is not None:
+    plot_config["plot_title"] = args.plot_title
+
+if args.output_file_name is not None:
+    # strip off extension
+    if len(args.output_file_name.split('.')) > 1:
+        args.output_file_name = '.'.join( args.output_file_name.split('.')[:-1] )
+    plot_config['plot_file_name'] = args.output_file_name
 
 plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
 
@@ -60,8 +70,6 @@ if "plot_eta" in plot_config:
 else:
     plot_config["plot_eta"] = True
 
-if args.plot_title is not None:
-    plot_config["plot_title"] = args.plot_title
 if args.verbose is True:
     logr.setLevel(logging.DEBUG)
 
