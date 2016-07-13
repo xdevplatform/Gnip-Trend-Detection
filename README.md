@@ -5,7 +5,7 @@ along with software that implements a variety of models for trend detection.
 
 We focus on trend detection in social data times series. A time series is
 defined by the presence of a word, a phrase, a hashtags, a mention, or any
-other characteristic of a social media event that can be counted over a
+other characteristic of a social media event that can be counted in a
 series of time intervals. To do trend detection, we quantify 
 the degree to which each count in the time series is atypical. We refer to
 this figure of merit with the Greek letter *eta*, and we say that a 
@@ -39,46 +39,41 @@ transformed into form useable by the scripts in this package.
 
 ## Input Data
 
-The input data can contain multiple "rules" or tags of counts, and is expected to contain data 
-for one rule and one time interval on each line, in the following format:
+The input data consists of CSV records, 
+and is expected to contain data 
+for one counter and one time interval on each line, in the following format:
 
-| end-timestamp | rule name | rule count | count for all rules | time interval duration in sec |
-| ------------------- | --------- | ---------- | ------------------- | ------------------------- |
-| 2015-01-01 00:03:25.0  | fedex | 13 | 201 | 162.0 |
-| 2015-01-01 00:03:25.0  | ups | 188 | 201 | 162.0 |
-|2015-01-01 00:06:40.0| ups| 191| 201| 195.0 |
-|2015-01-01 00:06:40.0| fedex| 10| 201| 195.0 |
+| interval start time | interval duration in sec. | count | counter name |
+| ------------------- | --------- | ---------- | ------------------- |
+| 2015-01-01 00:03:25.0  | 195 | 201 | TweetCounter |
+| 2015-01-01 00:03:25.0  | 195 | 13 | ReTweetCounter |
+|2015-01-01 00:06:40.0| 195 | 191 | TweetCounter |
+|2015-01-01 00:06:40.0| 195 | 10 | ReTweetCounter |
 
-The fourth column must be present, but is ignored by the analysis code.
-
-The simplest option for getting data into the correct format is to use
-the [Gnip-Stream-Collector-Metrics](https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package. 
-With this package, you can connect to your Gnip PowerTrack stream, 
-and write out both the raw data and the counts of Tweets matching your rules.
-This mode is configured with the following snippet in the `gnip.cfg` file 
-in Gnip-Stream-Collector-Metrics repo:
-
-`processtype=files,rules`
-
+The recommend way to produce time series data in the correct format is to use
+the [Gnip-Analysis-Pipeline](https://github.com/jeffakolb/Gnip-Analysis-Pipeline) package. 
+With this package, you can enrich and aggregate Tweet data from the Gnip APIs.
+You can find a set of dummy data in `example/example.csv`.
 
 ## Software Components
 
 The work is divided into three basic tasks:
 
-* Bin choice - The original data is filtered for a specific "rule" name, and 
+* Bin size choice - The original data is filtered for a specific counter name, and 
 collected into larger, even-sized bins, sized to the user's wish. 
-This is performed by `rebin.py`. 
+This is performed by `trend_rebin.py`. 
 * Analysis - Each data point is analyzed according to a model implemented in
-the `models.py` file. Models return a figure-of-merit for each point.
+the `gnip_trend_detection/models.py` file. Models return a figure-of-merit for each point.
+This is performed by `trend_analysis.py`.
 * Plotting - The original time series is plotted and overlaid with a plot of the *eta* values. 
-This is performed by `plot.py`. 
+This is performed by `trend_plot.py`. 
 
 ## Installation
 
-This scripts and library in the repository can be installed with `setuptools`. Assuming 
-a virtual environment, the most basic workflow is:
+This scripts and library in the repository can be pip-installed locally. Assuming 
+a typical virtual Python environment, the most basic workflow is:
 
-`python setup.py install`
+`[REPOSITORY] $ pip install . -U`
 
 ## Configuration
 
@@ -91,31 +86,29 @@ for more details.
 
 A full example has been provided in the `example` directory. In it, you will find
 formatted time series data for mentions of the "#scotus" hashtag in August-September 2014.
-This file is `example/scotus.txt`. In the same directory, there is a configuration file, 
+This file is `example/example.csv`. In the same directory, there is a configuration file, 
 which specifies what the software will do, including the size of the final time buckets 
 and the trend detection technique and parameter values. This example assumes that you
-have installed the package, but are working from the repo directory.
+have installed the package, but are working from the repo directory. The example will run
+from any location, but the paths to input and configuration files would have to change. 
 
-The first step to to use the "rebin" script to get appropriately and evenly sized time buckets.
-Let's use 2-hour buckets and put the output (which is pickled) back in the the example directory.
+The first step to to use the rebin script to get appropriately and evenly sized time buckets.
+Let's use 2-hour buckets and put the output back in the the example directory. 
 
-`rebin.py -i example/scotus.txt -o example/scotus.pkl -c example/config.cfg`
+`cat example/example.csv | trend_rebin.py -c example/config.cfg > example/scotus_rebinned.csv` 
 
-Use the `-v` option to see the raw data.
-
-Next, we will run the analysis script, which when run alone, should return nothing.
+Next, we will run the analysis script on the re-binned data.
 Remember, all the modeling specification is in the config file.
 
-`analyze.py -i example/scotus.pkl -c example/config.cfg`
-
-Use the `-v` option to see the raw data, including the results for *eta*. 
+`cat example/scotus_rebinned.csv | trend_analyze.py -c example/config.cfg > example/scotus_analyzed.csv`
 
 To view results, let's run the plotting after the analysis, both of which 
 are packaged in the plotting script:
 
-`plot.py -i example/scotus.pkl -c example/config.cfg` 
+`cat example/scotus_analyzed.csv | trend_plot.py -c example/config.cfg` 
 
-The output PNG should be in the example directory and look like:
+The configuration specifies that the output PNG should be in the example directory.
+It will look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus.png?raw=true) 
 
@@ -157,7 +150,7 @@ and the output PNG should look like:
 
 ## Analysis Model Details
 
-The various trend detection techniques are implemented as classes in `models.py`.
+The various trend detection techniques are implemented as classes in `gnip_trend_detection/models.py`.
 The idea is for each model to get updated point-by-point with the time series data,
 and to store internally whichever data is need to calculate the figure of merit for
 the latest point.

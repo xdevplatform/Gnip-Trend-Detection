@@ -40,7 +40,7 @@ if logger.handlers == []:
     logger.addHandler(hndlr) 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-c","--config-file",dest="config_file_name",default=None)   
+parser.add_argument("-q","--config-file",dest="config_file_name",default=None)   
 parser.add_argument("-i","--input-file",dest="input_file_names",nargs="+",default=[])    
 parser.add_argument("-d","--input-file-base-dir",dest="input_file_base_dir",default=None)   
 parser.add_argument("-p","--input-file-postfix",dest="input_file_postfix",default="counts")    
@@ -83,15 +83,12 @@ else:
 if args.counter_name is not None:
     counter_name = args.counter_name
 
-if counter_name is not None:
-    try:
-        input_generator = [ item for item in input_generator if utils.is_same(item[3],counter_name) ] 
-    except IndexError:
-        sys.stderr.write('Input CSV does not contain a fourth field; cannot parse for counter name.') 
-        sys.exit(1)
+if counter_name is None:
+    sys.stderr.write("Must specify 'counter_name' via command-line arg or config file!\n") 
+    sys.exit(1)
 
 # do the rebin
-data = rebin(input_generator, **kwargs)
+data = rebin(input_generator, counter_name, **kwargs)
 
 # do output
 if args.output_file_name is not None:

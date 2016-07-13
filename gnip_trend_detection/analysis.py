@@ -260,12 +260,8 @@ def plot(input_generator,config):
     ## fancify
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
     for tl in ax1.get_yticklabels():
-        if use_x_var:
-            tl.set_color('k')
-            ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
-        else:
-            tl.set_color('b')
-            ax1.set_ylabel(config["y_label"],color='b',fontsize=12)
+        tl.set_color('k')
+        ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
         tl.set_fontsize(10)
     plt.locator_params(axis = 'y', nbins = 4)
     if use_x_var:
