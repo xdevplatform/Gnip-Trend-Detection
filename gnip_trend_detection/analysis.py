@@ -5,6 +5,7 @@ import operator
 import importlib
 import logging
 import os
+import sys
 import datetime_truncate 
 from math import log10, floor
 from dateutil.parser import parse as dt_parser
@@ -41,7 +42,7 @@ def rebin(input_generator,
     """
     
     logger = logging.getLogger("rebin")
-
+    
     start_time = dt_parser(start_time)  
     stop_time = dt_parser(stop_time)  
 

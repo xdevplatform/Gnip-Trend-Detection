@@ -16,16 +16,18 @@ The script reads in CSV data in the format:
     start_time_stamp,interval_duration_in_sec,count[,counter name]
 Data are read from stdin or a file. 
 
+NOTE: this script does not filter for a specific counter name.
+You must do this yourself.
+
 Inputs are:
     input file name(s)
-    counter name
     start time
     stop time
     bin size and unit
     output file name
 
 Output is a CSV with the following format:
-    start_time_stamp,interval_duration_in_sec,count[,counter name]
+    start_time_stamp,interval_duration_in_sec,count
 
 """
    
@@ -40,7 +42,7 @@ if logger.handlers == []:
     logger.addHandler(hndlr) 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-q","--config-file",dest="config_file_name",default=None)   
+parser.add_argument("-c","--config-file",dest="config_file_name",default=None)   
 parser.add_argument("-i","--input-file",dest="input_file_names",nargs="+",default=[])    
 parser.add_argument("-d","--input-file-base-dir",dest="input_file_base_dir",default=None)   
 parser.add_argument("-p","--input-file-postfix",dest="input_file_postfix",default="counts")    
@@ -64,31 +66,21 @@ if len(args.input_file_names) != 0:
 else:
     input_generator = csv.reader(sys.stdin)
 
-counter_name = None
 # parse config file
-if ( args.config_file_name is not None and not os.path.exists(args.config_file_name) ) or os.path.exists("config.cfg"): 
+if ( args.config_file_name is not None and os.path.exists(args.config_file_name) ) or os.path.exists("config.cfg"): 
     if args.config_file_name is None and os.path.exists("config.cfg"):
         args.config_file_name = "config.cfg"
-    
+
     import ConfigParser as cp 
     config = cp.ConfigParser()
     config.read(args.config_file_name)
     rebin_config = config.items("rebin") 
     kwargs = dict(rebin_config) 
-    if 'counter_name' in kwargs:
-        counter_name = kwargs['counter_name']
 else:
     kwargs = {}
 
-if args.counter_name is not None:
-    counter_name = args.counter_name
-
-if counter_name is None:
-    sys.stderr.write("Must specify 'counter_name' via command-line arg or config file!\n") 
-    sys.exit(1)
-
 # do the rebin
-data = rebin(input_generator, counter_name, **kwargs)
+data = rebin(input_generator, **kwargs)
 
 # do output
 if args.output_file_name is not None:
