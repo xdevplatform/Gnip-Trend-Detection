@@ -120,7 +120,7 @@ if args.do_rebin:
         sys.exit(1)
 
     rebin_results = {}
-    for counter,data in input_data: 
+    for counter,data in input_data.items(): 
         # set up config for this job
         config = copy.copy(rebin_config)
         rebin_results[counter] = pool.apply_async(rebin,(data,counter),config) 

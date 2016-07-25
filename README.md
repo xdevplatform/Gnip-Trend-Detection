@@ -31,17 +31,10 @@ configured to read
 from a Gnip PowerTrack stream. However, any time series data can be easily
 transformed into form useable by the scripts in this package. 
 
-## Requirements
-
-* scipy
-* sklearn
-* matplotlib
-
 ## Input Data
 
-The input data consists of CSV records, 
-and is expected to contain data 
-for one counter and one time interval on each line, in the following format:
+The input data consists of CSV records, and is expected to contain data for one
+counter and one time interval on each line, in the following format:
 
 | interval start time | interval duration in sec. | count | counter name |
 | ------------------- | --------- | ---------- | ------------------- |
@@ -50,7 +43,10 @@ for one counter and one time interval on each line, in the following format:
 |2015-01-01 00:06:40.0| 195 | 191 | TweetCounter |
 |2015-01-01 00:06:40.0| 195 | 10 | ReTweetCounter |
 
-The recommend way to produce time series data in the correct format is to use
+The format of the interval start time can be any of the large number of standard
+formats recognized by Python's [dateutil](https://dateutil.readthedocs.io/en/stable/) package. 
+
+The recommended way to produce time series data in the correct format is to use
 the [Gnip-Analysis-Pipeline](https://github.com/jeffakolb/Gnip-Analysis-Pipeline) package. 
 With this package, you can enrich and aggregate Tweet data from the Gnip APIs.
 You can find a set of dummy data in `example/example.csv`.
@@ -59,13 +55,13 @@ You can find a set of dummy data in `example/example.csv`.
 
 The work is divided into three basic tasks:
 
-* Bin size choice - The original data is filtered for a specific counter name, and 
-collected into larger, even-sized bins, sized to the user's wish. 
+* **Series selection and bin size choice** - The original data is filtered for a specific counter name, and 
+collected into larger, evenly-sized bins, sized to the user's wish. 
 This is performed by `trend_rebin.py`. 
-* Analysis - Each data point is analyzed according to a model implemented in
+* **Trend Analysis** - Each data point is analyzed according to a model implemented in
 the `gnip_trend_detection/models.py` file. Models return a figure-of-merit for each point.
 This is performed by `trend_analysis.py`.
-* Plotting - The original time series is plotted and overlaid with a plot of the *eta* values. 
+* **Plotting** - The original time series is plotted and overlaid with a plot of the *eta* values. 
 This is performed by `trend_plot.py`. 
 
 ## Installation
@@ -73,11 +69,11 @@ This is performed by `trend_plot.py`.
 This scripts and library in the repository can be pip-installed locally. Assuming 
 a typical virtual Python environment, the most basic workflow is:
 
-`[REPOSITORY] $ pip install . -U`
+`[REPOSITORY] $ pip install gnip_trend_detection -U`
 
 ## Configuration
 
-All the scripts mentioned in the previous section assume the presence of a configuration
+All the scripts mentioned in the previous sections assume the presence of a configuration
 file. By default, its name is `config.cfg`. You can find a template at `config.cfg.example`.
 A few parameters can be set with command-line argument. Use the scripts' `-h` option
 for more details.
@@ -112,8 +108,8 @@ It will look like:
 
 ![scotus](https://github.com/jeffakolb/Gnip-Trend-Detection/blob/master/example/scotus.png?raw=true) 
 
-This analysis is based on the point-by-point Poisson model, with the previous point 
-as the background expectation. You must still choose the cutoff value of *eta* (called *theta*)
+This analysis is based on a point-by-point Poisson model, with the previous point 
+defining the expectation for the current point. You must still choose the cutoff value of *eta* (called *theta*)
 that defines the presence of a trend. It is clear that, if you wish to flag the large
 spike as a trend, almost any choice for *theta* will lead to lots of false positives.
 

@@ -54,8 +54,11 @@ def rebin(input_generator,
 
     # put the data into a list of (TimeBucket, count) tuples
     for line in input_generator:
-            
-        this_start_time = dt_parser(line[0])  
+        
+        try:
+            this_start_time = dt_parser(line[0])
+        except ValueError:
+            continue
         dt = datetime.timedelta(seconds=int(float(line[1])))
         this_stop_time = this_start_time + dt
        
@@ -175,7 +178,11 @@ def analyze(generator, model):
 
     output_data = [] 
     for line in generator:
-        time_interval_start = dt_parser(line[0])
+        try:
+            time_interval_start = dt_parser(line[0]) 
+        except ValueError:
+            print(line[0])
+            sys.exit()
         time_interval_duration = line[1]
         count = float(line[2])
         
@@ -296,7 +303,7 @@ def plot(input_generator,config):
         os.makedirs(config["plot_dir"]) 
     except OSError:
         pass
-    plot_file_name = "{}/{}.{}".format(config["plot_dir"].rstrip('/'), config["plot_file_name"],config["plot_file_extension"])
+    plot_file_name = u"{}/{}.{}".format(config["plot_dir"].rstrip('/'), config["plot_file_name"],config["plot_file_extension"])
     plt.savefig(plot_file_name) 
     plt.close()
 
