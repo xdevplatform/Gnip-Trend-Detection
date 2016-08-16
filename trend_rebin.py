@@ -2,11 +2,14 @@
 
 import logging
 import argparse
-import ConfigParser
 import os
 import fileinput
 import sys
 import csv
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 
 from gnip_trend_detection.analysis import rebin
 from gnip_trend_detection import utils
@@ -71,8 +74,7 @@ if ( args.config_file_name is not None and os.path.exists(args.config_file_name)
     if args.config_file_name is None and os.path.exists("config.cfg"):
         args.config_file_name = "config.cfg"
 
-    import ConfigParser as cp 
-    config = cp.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(args.config_file_name)
     rebin_config = config.items("rebin") 
     kwargs = dict(rebin_config) 

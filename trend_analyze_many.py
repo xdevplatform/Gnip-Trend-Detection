@@ -23,7 +23,6 @@ import json
 import datetime
 import time
 import argparse
-import ConfigParser
 import logging
 import sys 
 import os
@@ -32,7 +31,10 @@ import csv
 import fileinput
 import collections
 import multiprocessing as mp
-
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 from gnip_trend_detection.analysis import rebin
 from gnip_trend_detection.analysis import analyze as analyzer
 from gnip_trend_detection.analysis import plot as plotter
@@ -70,7 +72,7 @@ else:
     if args.config_file_name is None and os.path.exists("config.cfg"):
         args.config_file_name = "config.cfg"
     
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(args.config_file_name)
     rebin_config = dict(config.items("rebin") )
     model_name = config.get("analyze","model_name")
@@ -172,14 +174,14 @@ if args.do_analysis:
         if datetime.datetime.now().second%10 == 0:
             logger.info(str(len(analyzer_results)) + ' analyses remaining')
         time.sleep(0.8)
-        for counter,result in analyzer_results.items():
+        for counter,result in list(analyzer_results.items()):
             if result.ready():
                 analyzer_output_data[counter] = result.get()
                 del analyzer_results[counter]
                 logger.debug("{} results unfinished".format(len(analyzer_results)))
                 #break
     if args.analyzed_file_name is not None:
-        json.dump(analyzer_output_data,open(args.analyzed_file_name,'wb'))
+        json.dump(analyzer_output_data,open(args.analyzed_file_name,'w'))
 
 if args.do_plot:
 
@@ -197,7 +199,7 @@ if args.do_plot:
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
     plot_config["plot_dir"] += "{}/".format(model_name)
 
-    for counter, plotable_data in plotting_input_data.items():
+    for counter, plotable_data in list(plotting_input_data.items()): 
         if len(plotable_data) == 0:
             continue
         # remove spaces in counter name

@@ -15,12 +15,11 @@ from dateutil.parser import parse as dt_parser
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
-from time_bucket import TimeBucket
-import models
+from .time_bucket import TimeBucket
 
 def rebin(input_generator,
-        start_time = str(datetime.datetime(1970,01,01)),
-        stop_time = str(datetime.datetime(2020,01,01)),
+        start_time = str(datetime.datetime(1970,1,1)),
+        stop_time = str(datetime.datetime(2020,1,1)),
         binning_unit = 'hours',
         n_binning_unit = 1,
         **kwargs

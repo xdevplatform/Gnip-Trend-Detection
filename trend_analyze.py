@@ -5,8 +5,11 @@ import csv
 import importlib
 import argparse
 import logging
-import ConfigParser
-
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
+    
 from gnip_trend_detection.analysis import analyze
 from gnip_trend_detection import models
 
@@ -27,7 +30,7 @@ parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=
 args = parser.parse_args()
 
 # read config file
-config = ConfigParser.SafeConfigParser()
+config = configparser.SafeConfigParser()
 config.read(args.config_file_name)
 model_name = config.get("analyze","model_name")
 model_config = dict(config.items(model_name + "_model"))

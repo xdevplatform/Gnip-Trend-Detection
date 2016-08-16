@@ -2,10 +2,13 @@
 
 import sys
 import argparse
-import ConfigParser
 import importlib
 import logging
 import csv
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 
 from gnip_trend_detection import models
 from gnip_trend_detection.analysis import analyze
@@ -28,7 +31,7 @@ args = parser.parse_args()
 
 plot_config = {}
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(args.config_file_name)
 model_name = config.get("analyze","model_name")
 model_config = dict(config.items(model_name + "_model")) 
