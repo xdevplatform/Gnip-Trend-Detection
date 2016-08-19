@@ -75,9 +75,7 @@ def rebin(input_generator,
         if this_start_time < min_start_time:
             min_start_time = this_start_time
 
-    #logger.debug("Completed reading from files for {}".format(counter_name))
     input_data_sorted = sorted(input_data)
-    #logger.debug("Completed sorting data for {}".format(counter_name))
 
     # make a grid with appropriate bin size
     grid_start_time = datetime_truncate.truncate(min_start_time,binning_unit.rstrip('s'))
@@ -97,7 +95,6 @@ def rebin(input_generator,
         tb = TimeBucket(tb_start_time,tb_stop_time) 
     grid.append(tb)
 
-    #logger.debug("Finished generating grid for {}".format(counter_name))
 
     # add data to a dictionary with keys mapped to the grid indicies
     output_data = collections.defaultdict(float)
@@ -129,8 +126,6 @@ def rebin(input_generator,
             else:
                 pass
 
-    #logger.debug("Completed rebin distribution for {}".format(counter_name)) 
-    
     # put data back into a sorted list of tuples
     sorted_output_data = []
 

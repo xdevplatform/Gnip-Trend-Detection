@@ -6,7 +6,7 @@ import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input-file",dest="input_file",default=None)
-parser.add_argument("-t","--theta",dest="theta",default=float(1))
+parser.add_argument("-t","--theta",dest="theta",default=float(1),type=float)
 args = parser.parse_args()
 
 if args.input_file is None:

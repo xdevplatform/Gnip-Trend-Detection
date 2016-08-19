@@ -41,9 +41,9 @@ from gnip_trend_detection.analysis import plot as plotter
 from gnip_trend_detection import models,utils
 
 #lvl = logging.DEBUG
-lvl = logging.WARNING
+lvl = logging.INFO
 
-logger = logging.getLogger("analyze")
+logger = logging.getLogger("rebin-analyze-plot")
 if logger.handlers == []:
     fmtr = logging.Formatter('%(asctime)s %(module)s:%(lineno)s - %(levelname)s - %(message)s') 
     hndlr = logging.StreamHandler()
@@ -54,23 +54,36 @@ if logger.handlers == []:
 
 # get input, output, and config file naems from cmd-line argument parsing
 parser = argparse.ArgumentParser()
-parser.add_argument("-c","--config-file",dest="config_file_name",default=None)   
-parser.add_argument("-i","--input-file-names",dest="input_file_names",default=None,nargs="+")   
-parser.add_argument("-o","--rebinned-file-name",dest="rebinned_file_name",default=None)    
-parser.add_argument("-e","--analyzed-file-name",dest="analyzed_file_name",default=None)
-parser.add_argument("-r","--do-rebin",dest="do_rebin",action="store_true",default=False,help="do rebin")   
-parser.add_argument("-a","--do-analysis",dest="do_analysis",action="store_true",default=False,help="do analysis")   
-parser.add_argument("-p","--do-plotting",dest="do_plot",action="store_true",default=False,help="do plotting")   
+parser.add_argument("-c","--config-file",dest="config_file_name",default=None)
+parser.add_argument("-i",
+        dest="input_file_names",default=None,nargs="+",
+        help="input file name(s) for CSV data to rebin or analyze")   
+parser.add_argument("-r",
+        dest="rebin_output_file_name",default=None,
+        help="output file name for JSON-formatted re-binned data")    
+parser.add_argument("-a",
+        dest="analysis_input_file_name",default=None,
+        help="input file name for JSON-formatted data to be analyzed")    
+parser.add_argument("-o",
+        dest="analysis_output_file_name",default=None,
+        help="output file name for JSON-formatted analyzed data")    
+parser.add_argument("-p",
+        dest="plot_input_file_name",default=None,
+        help="output file name for JSON-formatted data to be plotted")    
+parser.add_argument("--rebin",dest="do_rebin",action="store_true",default=False,help="do rebin")   
+parser.add_argument("--analysis",dest="do_analysis",action="store_true",default=False,help="do analysis")   
+parser.add_argument("--plot",dest="do_plot",action="store_true",default=False,help="do plotting")   
 parser.add_argument("-v","--verbose",dest="verbose",action="store_true",default=False)   
 args = parser.parse_args()
 
 # parse config file, which contains model and rule info
 if args.config_file_name is not None and not os.path.exists(args.config_file_name) and not os.path.exists("config.cfg"): 
-    logger.error("cmd-line argument 'config_file_name' must be a valid config file, or config.cfg must exist")
+    logger.error("cmd-line argument 'config_file_name' must reference a valid config file, or config.cfg must exist")
     sys.exit(1)
 else:
     if args.config_file_name is None and os.path.exists("config.cfg"):
         args.config_file_name = "config.cfg"
+    logger.info('Using {} for configuration.'.format(args.config_file_name))
     
     config = configparser.ConfigParser()
     config.read(args.config_file_name)
@@ -92,9 +105,26 @@ else:
 if args.verbose:
     logger.setLevel(logging.INFO)
 
+# warn if option configuration will return no results
+if args.do_rebin and not args.do_analysis and args.rebin_output_file_name is None: 
+    logger.error('No rebin output file specified or further analysis requested, so rebin results will be lost!')
+    sys.exit(1)
+if args.do_analysis and not args.do_plot and args.analysis_output_file_name is None:
+    logger.error('No analysis output file specified or further plotting requested, so analysis results will be lost!')
+    sys.exit(1)
+
+# warn if options configure ambiguous input 
+if args.do_analysis and args.do_rebin and args.analysis_input_file_name is not None:
+    logger.error('Input to analysis step is ambigious. Exiting.')
+    sys.exit(1)
+if args.do_rebin and args.do_plot and args.plot_input_file_name is not None:
+    logger.error('Input to plotting step is ambigious. Exiting.')
+    sys.exit(1)
+
 # process input data if available
 input_data = None
 if args.input_file_names is not None:
+    logger.info('Loading CSV data...')  
     input_data = collections.defaultdict(list)
     
     input_generator = csv.reader(fileinput.input(args.input_file_names))
@@ -104,13 +134,14 @@ if args.input_file_names is not None:
         try:
             counter_name = line[3] 
         except IndexError:
-            sys.stderr.write("no 4th field in " + str(line) + '\n')
+            logger.debug("no 4th field in " + str(line))
             continue
-        input_data[counter_name].append(line[:3])
+        if counter_name in counters:
+            input_data[counter_name].append(line[:3])
 
-logger.info('Finished loading data')
+    logger.info('Finished loading CSV data')
 
-# set up some multiprocessing stuff
+# set up the multiprocessing stuff
 pool = mp.Pool()
 
 rebin_output_data = None
@@ -118,26 +149,30 @@ if args.do_rebin:
     logger.info('Re-binning...')
     
     if input_data is None:
-        sys.stderr.write("Input file(s) must be specified. Exiting.\n")
+        sys.stderr.write("Input file(s) must be specified with '-i'. Exiting.\n")
         sys.exit(1)
 
     rebin_results = {}
     for counter,data in input_data.items(): 
         # set up config for this job
         config = copy.copy(rebin_config)
-        rebin_results[counter] = pool.apply_async(rebin,(data,counter),config) 
+        rebin_results[counter] = pool.apply_async(rebin,(data,),config) 
 
     rebin_output_data = {}
-    while len(rebin_results) != 0:
-        time.sleep(0.1)
-        for counter,result in rebin_results.items():
+    num_rebin_results = len(rebin_results)
+    while num_rebin_results != 0:
+        if datetime.datetime.now().second%10 == 0:
+            logger.info(str(num_rebin_results) + ' rebins remaining') 
+            time.sleep(1)
+        logger.debug("{} results unfinished".format(num_rebin_results))
+        for counter,result in list(rebin_results.items()):
             if result.ready():
                 rebin_output_data[counter] = result.get()
                 del rebin_results[counter]
-                logger.debug("{} results unfinished".format(len(rebin_results)))
-                break
-    if args.rebinned_file_name is not None:
-        json.dump(rebin_output_data,open(args.rebinned_file_name,'wb'))
+        num_rebin_results = len(rebin_results)
+    
+    if args.rebin_output_file_name is not None:
+        json.dump(rebin_output_data,open(args.rebin_output_file_name,'w'))
 
 analyzer_output_data = None
 if args.do_analysis:
@@ -149,16 +184,16 @@ if args.do_analysis:
 
     # get input data
     if rebin_output_data is None:
-        if args.rebinned_file_name is None:
+        if args.analysis_input_file_name is None:
             if input_data is None:
-                sys.stderr.write('No input data available or file specified. Exiting.\n')
+                sys.stderr.write('No input data available ("-a") or input file specified ("-i").\n Exiting.\n')
                 sys.exit(1)
             else:
                 # account for input that has not been rebinned
-                logger.debug('Using input data directly in analysis')
+                logger.debug('Using input data directly in analyze step')
                 analyzer_input_data = input_data
         else: 
-            analyzer_input_data = json.load(open(args.rebinned_file_name))
+            analyzer_input_data = json.load(open(args.analysis_input_file_name))
     else:
         analyzer_input_data = rebin_output_data
 
@@ -166,32 +201,33 @@ if args.do_analysis:
     for counter, counter_data in analyzer_input_data.items():
         if len(counter_data) == 0:
             continue
-        #logger.debug(u"submitting analysis for counter: {}".format(counter))
         analyzer_results[counter] = pool.apply_async(analyzer,(counter_data,model)) 
 
     analyzer_output_data = {}
-    while len(analyzer_results) != 0:
+    num_analyzer_results = len(analyzer_results)
+    while num_analyzer_results != 0:
         if datetime.datetime.now().second%10 == 0:
-            logger.info(str(len(analyzer_results)) + ' analyses remaining')
-        time.sleep(0.8)
+            logger.info(str(num_analyzer_results) + ' analyses remaining')
+            time.sleep(1)
+        logger.debug("{} results unfinished".format(num_analyzer_results))
         for counter,result in list(analyzer_results.items()):
             if result.ready():
                 analyzer_output_data[counter] = result.get()
                 del analyzer_results[counter]
-                logger.debug("{} results unfinished".format(len(analyzer_results)))
-                #break
-    if args.analyzed_file_name is not None:
-        json.dump(analyzer_output_data,open(args.analyzed_file_name,'w'))
+        num_analyzer_results = len(analyzer_results)
+    
+    if args.analysis_output_file_name is not None:
+        json.dump(analyzer_output_data,open(args.analysis_output_file_name,'w'))
 
 if args.do_plot:
 
     logger.info('Plotting...')
 
     if analyzer_output_data is None:
-        if args.analyzed_file_name is None:
+        if args.plot_input_file_name is None:
             sys.stderr.write('No analyzed input data available or file specified. Exiting.\n')
             sys.exit(1)
-        plotting_input_data = json.load(open(args.analyzed_file_name))
+        plotting_input_data = json.load(open(args.plot_input_file_name))
     else:
         plotting_input_data = analyzer_output_data
 
