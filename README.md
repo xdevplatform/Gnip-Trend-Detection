@@ -69,7 +69,7 @@ This is performed by `trend_plot.py`.
 This scripts and library in the repository can be pip-installed locally. Assuming 
 a typical virtual Python environment, the most basic workflow is:
 
-`[REPOSITORY] $ pip install gnip_trend_detection -U`
+`[REPOSITORY] $ pip install . -U`
 
 ## Configuration
 
