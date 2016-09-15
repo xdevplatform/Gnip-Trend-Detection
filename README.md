@@ -69,7 +69,10 @@ This is performed by `trend_plot.py`.
 This scripts and library in the repository can be pip-installed locally. Assuming 
 a typical virtual Python environment, the most basic workflow is:
 
-`[REPOSITORY] $ pip install . -U`
+`[REPOSITORY] $ pip install -e .[plotting]`
+
+Remove the "plotting" extra to avoid matplotlib, but note that the plotting examples
+below will not work.
 
 ## Configuration
 
