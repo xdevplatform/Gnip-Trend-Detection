@@ -69,7 +69,7 @@ parser.add_argument("-o",
         help="output file name for JSON-formatted analyzed data")    
 parser.add_argument("-p",
         dest="plot_input_file_name",default=None,
-        help="output file name for JSON-formatted data to be plotted")    
+        help="input file name for JSON-formatted data to be plotted")    
 parser.add_argument("--rebin",dest="do_rebin",action="store_true",default=False,help="do rebin")   
 parser.add_argument("--analysis",dest="do_analysis",action="store_true",default=False,help="do analysis")   
 parser.add_argument("--plot",dest="do_plot",action="store_true",default=False,help="do plotting")   
@@ -233,7 +233,7 @@ if args.do_plot:
 
     # auto-generate this plotting param from re-bin params
     plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
-    plot_config["plot_dir"] += "{}/".format(model_name)
+    plot_config["plot_dir"] = plot_config['plot_dir'].rstrip('/') + "/{}/".format(model_name)
 
     for counter, plotable_data in list(plotting_input_data.items()): 
         if len(plotable_data) == 0:

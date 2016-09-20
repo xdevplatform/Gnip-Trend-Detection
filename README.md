@@ -51,28 +51,39 @@ the [Gnip-Analysis-Pipeline](https://github.com/jeffakolb/Gnip-Analysis-Pipeline
 With this package, you can enrich and aggregate Tweet data from the Gnip APIs.
 You can find a set of dummy data in `example/example.csv`.
 
-## Software Components
-
-The work is divided into three basic tasks:
-
-* **Series selection and bin size choice** - The original data is filtered for a specific counter name, and 
-collected into larger, evenly-sized bins, sized to the user's wish. 
-This is performed by `trend_rebin.py`. 
-* **Trend Analysis** - Each data point is analyzed according to a model implemented in
-the `gnip_trend_detection/models.py` file. Models return a figure-of-merit for each point.
-This is performed by `trend_analysis.py`.
-* **Plotting** - The original time series is plotted and overlaid with a plot of the *eta* values. 
-This is performed by `trend_plot.py`. 
-
 ## Installation
 
-This scripts and library in the repository can be pip-installed locally. Assuming 
-a typical virtual Python environment, the most basic workflow is:
+The package can be pip-installed. The 'plotting' extra includes matplotlib,
+and can be ignored if plotting is not important. Note that the examples below
+require plotting.
+
+`$ pip install gnip_trend_detection[plotting]` 
+
+The scripts and library in the repository can also be pip-installed locally. 
 
 `[REPOSITORY] $ pip install -e .[plotting]`
 
-Remove the "plotting" extra to avoid matplotlib, but note that the plotting examples
-below will not work.
+## Key functionalities
+
+The software in this package provides three scripts that perform the three main tasks:
+* `trend_rebin.py` - resize the time intervals of the input data
+* `trend_analyze.py` - calculate a figure-of-merit (trend score) at each point
+* `trend_plot.py` - plot the counts and the figure-of-merit 
+These scripts act on and deliver CSV data.
+
+A fourth script, `trend_analyze_many.py`, performs these steps sequentially,
+with re-binning and analysis done in parallel. To manage the (potentially) 
+large number of time series, this script uses JSON-formatted intermediate 
+and final data strutures.  
+
+Two final scripts provide extra analysis information:
+* `trend_detection.py`
+    * return information about time series data sets with trend figures-of-merit that exceed a threshold. 
+This script is intended 
+to be used on the analyzed output of the `trend_analyze_many.py` script.
+* `time_series_correlations.py` 
+    * calculate a correlation coefficient between
+all pairs of time series in a CSV data set (BUGS BE HERE).
 
 ## Configuration
 
