@@ -107,7 +107,7 @@ class WeightedDataTemplates(object):
         #    self.logger = logging.getLogger("default_template_logger") 
         #self.logger = logr
 
-        import library
+        from .library import Library
         if "library_file_name" in config:
             self.library = pickle.load(open(config["library_file_name"],'rb'))
         else:
