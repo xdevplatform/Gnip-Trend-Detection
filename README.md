@@ -69,6 +69,7 @@ The software in this package provides three scripts that perform the three main 
 * `trend_rebin.py` - resize the time intervals of the input data
 * `trend_analyze.py` - calculate a figure-of-merit (trend score) at each point
 * `trend_plot.py` - plot the counts and the figure-of-merit 
+
 These scripts act on and deliver CSV data.
 
 A fourth script, `trend_analyze_many.py`, performs these steps sequentially,
