@@ -63,6 +63,10 @@ The scripts and library in the repository can also be pip-installed locally.
 
 `[REPOSITORY] $ pip install -e .[plotting]`
 
+Depending on your operating system, you may need to set a 
+[Matplotlib backend](http://matplotlib.org/faq/usage_faq.html#what-is-a-backend), 
+often done in `~/.matplotlib/matplotlibrc`. 
+
 ## Key functionalities
 
 The software in this package provides three scripts that perform the three main tasks:
