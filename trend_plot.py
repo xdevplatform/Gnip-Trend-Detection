@@ -72,6 +72,11 @@ if "plot_eta" in plot_config:
     plot_config["plot_eta"] = config.getboolean("plot","plot_eta")
 else:
     plot_config["plot_eta"] = True
+try:
+    plot_config["dual_axis"] = config.getboolean("plot","dual_axis")
+except configparser.NoOptionError:
+    plot_config["dual_axis"] = True
+
 
 if args.verbose is True:
     logr.setLevel(logging.DEBUG)

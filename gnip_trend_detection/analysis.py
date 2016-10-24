@@ -13,6 +13,7 @@ from dateutil.parser import parse as dt_parser
 #import matplotlib as mpl
 #mpl.use('Agg')
 import matplotlib.dates as mdates
+import matplotlib.ticker as plticker
 import matplotlib.pyplot as plt
 
 from .time_bucket import TimeBucket
@@ -209,7 +210,7 @@ def plot(input_generator,config):
     if "y_label" not in config:
         config["y_label"] = "counts"
     if "start_time" in config and "stop_time" in config:
-        start_tm = dt_parse(config["start_time"])
+        start_tm = dt_parser(config["start_time"])
         stop_tm = dt_parser(config["stop_time"])
         data = [(dt_parser(tup[0]),float(tup[1]),float(tup[2])) for tup in input_generator if dt_parser(tup[0]) > start_tm and dt_parser(tup[0]) < stop_tm ]
     else:
@@ -248,51 +249,61 @@ def plot(input_generator,config):
     max_cts = max(cts)
     min_cts = min(cts)
    
-    # build the plot
-    fig = plt.figure()
-    plt.title(u"{}".format(config["plot_title"]))
-    
-    ax1 = fig.add_subplot(111)
+    # build the plotting surface
+    fig,(ax1,ax2) = plt.subplots(2,sharex=True) 
+   
+    # plot the data
     if use_x_var:
         ax1.plot(tbs,cts,'k-') 
     else:
         ax1.plot(cts,'k-') 
         ax1.set_xlim(0,len(cts))
-    
-    ## fancify
+   
+    plotter="plot"
+    if config["logscale_eta"]:
+        plotter="semilogy"
+    if use_x_var:
+        getattr(ax2,plotter)(tbs,eta,'r')
+    else:
+        getattr(ax2,plotter)(eta,'r')
+        ax2.set_xlim(0,len(eta))
+
+    # adjust spacing
     ax1.set_ylim(min_cts*0.9,max_cts*1.7)
+    min_eta = 0
+    if min(eta) > 0:
+        min_eta = min(eta) * 0.9
+    ax2.set_ylim(min_eta, max(eta)*1.1)
+
+    # remove the horizintal space between plots
+    plt.subplots_adjust(hspace=0)
+    # modify ticklabels
     for tl in ax1.get_yticklabels():
         tl.set_color('k')
-        ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
         tl.set_fontsize(10)
-    plt.locator_params(axis = 'y', nbins = 4)
+    for tl in ax2.get_yticklabels():
+        tl.set_color('r')
+        tl.set_fontsize(10)
+   
+    # y labels
+    ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
+    ax2.set_ylabel("eta",color='r',fontsize=12)
+
+    ax1.yaxis.set_major_locator(plticker.MaxNLocator(4))
+    ax2.yaxis.set_major_locator(plticker.MaxNLocator(5))
+
+    # x date formatting
     if use_x_var:
         formatter = mdates.DateFormatter('%Y-%m-%d')
-        ax1.xaxis.set_major_formatter( formatter ) 
+        ax2.xaxis.set_major_formatter( formatter ) 
         fig.autofmt_xdate()
-    ax1.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
+    ax2.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
 
-    if config['plot_eta']:
-        ax2 = ax1.twinx()
-        plotter="plot"
-        if config["logscale_eta"]:
-            plotter="semilogy"
-        if use_x_var:
-            getattr(ax2,plotter)(tbs,eta,'r')
-        else:
-            getattr(ax2,plotter)(eta,'r')
-            ax2.set_xlim(0,len(eta))
-        min_eta = 0
-        if min(eta) > 0:
-            min_eta = min(eta) * 0.9
-        ax2.set_ylim(min_eta, max(eta)*1.1)
-        ax2.set_ylabel("eta",color='r',fontsize=12)
-        for tl in ax2.get_yticklabels():
-            tl.set_color('r')
-            tl.set_fontsize(10)
-
-    if not config["plot_eta"]:
-        config["plot_file_name"] += "_no_eta"
+    ax1.grid(True)
+    ax2.grid(True)
+    
+    plt.suptitle(u"{}".format(config["plot_title"]))
+    
     try:
         os.makedirs(config["plot_dir"]) 
     except OSError:
