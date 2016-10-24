@@ -10,6 +10,8 @@ import numpy as np
 import scipy.stats.distributions as dists
 from sklearn.linear_model import LinearRegression
 
+from .mk_test import mk_test
+
 """
 Classes in the module implement trend detection techniques.
 For uniform interface, all classes must implement the following functions:
@@ -19,6 +21,28 @@ For uniform interface, all classes must implement the following functions:
         required keyword arguments may differ between models
 
 """
+
+class MannKendall:
+    def __init__(self, config):
+        self.counts = []
+        try:
+            self.window_size = int(config['window_size'])
+        except KeyError:
+            self.window_size = None
+        try:
+            self.alpha = float(config['alpha'])
+        except KeyError:
+            self.alpha = 0.05
+
+    def update(self, **kwargs):
+        count = kwargs["count"]
+        self.counts.append( count )
+
+    def get_result(self):
+        x = self.counts
+        if self.window_size is not None:
+            x = self.counts[-self.window_size:]
+        return mk_test(x,self.alpha)[3]
 
 class LinearRegressionModel(object):
     def __init__(self, config):
