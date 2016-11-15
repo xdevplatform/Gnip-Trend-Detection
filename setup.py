@@ -1,7 +1,7 @@
 from setuptools import setup,find_packages
 
 setup(name='gnip_trend_detection' 
-        ,version='0.2'
+        ,version='0.3'
         ,description='Trend/spike detection on time series from Twitter'
         ,url='https://github.com/jeffakolb/Gnip-Trend-Detection'
         ,author='Jeff Kolb'
