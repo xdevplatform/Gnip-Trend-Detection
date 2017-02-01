@@ -177,9 +177,9 @@ def rebin(**kwargs):
         # return the data structure
             return sorted_output_data
     
-    except ValueError, e:
+    except ValueError:
         logr.error(traceback.print_exc())
 
-    except Exception, e:
+    except Exception:
         logr.error(traceback.print_exc())
 
