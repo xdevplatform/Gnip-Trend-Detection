@@ -165,7 +165,11 @@ if args.do_rebin:
     num_rebin_results = len(rebin_results)
     while num_rebin_results != 0:
         if datetime.datetime.now().second%10 == 0:
-            logger.info(str(num_rebin_results) + ' rebins remaining') 
+            if num_rebin_results != 1:
+                logger.info(str(num_rebin_results) + ' rebins remaining') 
+            else:
+                # print the name of any 1 remaining job
+                logger.info(str(num_rebin_results) + ' rebins remaining ({})'.format([name for name in rebin_results.keys()][0]))  
             time.sleep(1)
         logger.debug("{} results unfinished".format(num_rebin_results))
         for counter,result in list(rebin_results.items()):
@@ -210,7 +214,11 @@ if args.do_analysis:
     num_analyzer_results = len(analyzer_results)
     while num_analyzer_results != 0:
         if datetime.datetime.now().second%10 == 0:
-            logger.info(str(num_analyzer_results) + ' analyses remaining')
+            if num_analyzer_results != 1:
+                logger.info(str(num_analyzer_results) + ' analyses remaining') 
+            else:
+                # print the name of any 1 remaining job
+                logger.info(str(num_analyzer_results) + ' analysis remaining ({})'.format([name for name in analyzer_results.keys()][0]))  
             time.sleep(1)
         logger.debug("{} results unfinished".format(num_analyzer_results))
         for counter,result in list(analyzer_results.items()):

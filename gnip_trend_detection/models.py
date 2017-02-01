@@ -303,7 +303,7 @@ class Poisson(object):
         Get relative (fractional) confidence interval size, 
         based on "self.mean" attribute.
         """
-        if self.mean is None:
+        if self.mean is None or self.mean == 0:
             return None
         delta_r = dists.poisson.interval(self.alpha,self.mean)[1] - dists.poisson.interval(self.alpha,self.mean)[0]
         relative_confidence_interval = delta_r/self.mean
