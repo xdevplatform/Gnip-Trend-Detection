@@ -128,7 +128,10 @@ if args.input_file_names is not None:
     input_data = collections.defaultdict(list)
     
     input_generator = csv.reader(fileinput.input(args.input_file_names))
-    counters = [counter.rstrip('\n') for counter in open(rebin_config["counters_file_name"]) ]
+    try:
+        counters = [counter.rstrip('\n') for counter in open(rebin_config["counters_file_name"]) ] 
+    except KeyError:
+        counters = None
     
     for line in input_generator:
         try:
@@ -136,7 +139,7 @@ if args.input_file_names is not None:
         except IndexError:
             logger.debug("no 4th field in " + str(line))
             continue
-        if counter_name in counters:
+        if counters is None or counter_name in counters:
             input_data[counter_name].append(line[:3])
 
     logger.info('Finished loading CSV data')

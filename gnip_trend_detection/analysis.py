@@ -10,8 +10,8 @@ import datetime_truncate
 from math import log10, floor
 from dateutil.parser import parse as dt_parser
 
-#import matplotlib as mpl
-#mpl.use('Agg')
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.dates as mdates
 import matplotlib.ticker as plticker
 import matplotlib.pyplot as plt
@@ -144,10 +144,11 @@ def rebin(input_generator,
         if count != 0 or prev_count != 0:
 
             if count > 0:
-                trimmed_count = round(count, -int(floor(log10(count)))+1) 
+                trimmed_count = int(count)
+                #trimmed_count = round(count, -int(floor(log10(count)))+1) 
             else:
                 trimmed_count = 0
-            sorted_output_data.append((str(dt.start_time),dt.size().seconds,trimmed_count)) 
+            sorted_output_data.append((str(dt.start_time),dt.size().total_seconds(),trimmed_count)) 
         
         prev_count = count
     sorted_output_data = sorted_output_data[:last_non_zero_ct_idx+1]

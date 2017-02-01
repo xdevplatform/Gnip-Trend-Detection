@@ -24,5 +24,5 @@ for counter,data in data_summary.items():
             global_max_eta = eta
             global_max_eta_counter = counter
         if eta > args.theta:
-            sys.stdout.write("Theta = {0} was exceeded at {1} by measurement: {2}; eta: {3:.1f}\n".format(args.theta,str(dt),counter,eta))
+            sys.stdout.write("Theta = {0} was exceeded at {1} by measurement: {2}; eta: {3:.3f}\n".format(args.theta,str(dt),counter,eta))
 sys.stdout.write("Max eta was {0:.1f} for measurement {1}\n".format(global_max_eta,global_max_eta_counter))
