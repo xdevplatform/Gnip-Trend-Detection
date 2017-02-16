@@ -127,12 +127,14 @@ if args.input_file_names is not None:
     logger.info('Loading CSV data...')  
     input_data = collections.defaultdict(list)
     
-    input_generator = csv.reader(fileinput.input(args.input_file_names))
+    input_generator = csv.reader(fileinput.input(args.input_file_names),
+            quoting=csv.QUOTE_NONE # this ignores quotes that are part of the counter name
+            )
     try:
         counters = [counter.rstrip('\n') for counter in open(rebin_config["counters_file_name"]) ] 
     except KeyError:
         counters = None
-    
+        
     for line in input_generator:
         try:
             counter_name = line[3] 
