@@ -90,8 +90,9 @@ else:
     rebin_config = dict(config.items("rebin") )
     model_name = config.get("analyze","model_name")
     model_config = dict(config.items(model_name + "_model"))
-    plot_config = dict(config.items("plot")) 
-    
+    #plot_config = dict(config.items("plot")) 
+
+    """
     # some plotting silliness
     if "logscale_eta" in plot_config:
         plot_config["logscale_eta"] = config.getboolean("plot","logscale_eta")
@@ -100,7 +101,8 @@ else:
     if "plot_eta" in plot_config:
         plot_config["plot_eta"] = config.getboolean("plot","plot_eta")
     else:
-        plot_config["plot_eta"] = True
+        plot_config["plot_eta"] = True 
+    """
 
 if args.verbose:
     logger.setLevel(logging.INFO)
@@ -160,8 +162,8 @@ if args.do_rebin:
     rebin_results = {}
     for counter,data in input_data.items(): 
         # set up config for this job
-        config = copy.copy(rebin_config)
-        rebin_results[counter] = pool.apply_async(rebin,(data,),config) 
+        this_config = copy.copy(rebin_config)
+        rebin_results[counter] = pool.apply_async(rebin,(data,),this_config) 
 
     rebin_output_data = {}
     num_rebin_results = len(rebin_results)
@@ -244,17 +246,19 @@ if args.do_plot:
     else:
         plotting_input_data = analyzer_output_data
 
-    # auto-generate this plotting param from re-bin params
-    plot_config["x_unit"] = str(rebin_config["n_binning_unit"]) + " " + str(rebin_config["binning_unit"])
-    plot_config["plot_dir"] = plot_config['plot_dir'].rstrip('/') + "/{}/".format(model_name)
+    plot_dir = config.get('plot','plot_dir',fallback='.').rstrip('/') + "/{}/".format(model_name)
+    config.set("plot","plot_dir",plot_dir)
 
     for counter, plotable_data in list(plotting_input_data.items()): 
         if len(plotable_data) == 0:
             continue
         # remove spaces in counter name
         counter_name = counter.replace(" ","-")[0:100]
-        plot_config["plot_title"] = counter_name
-        plot_config["plot_file_name"] = counter_name
-        plotter(plotable_data,plot_config) 
+        config.set("plot","plot_title", counter_name )
+        config.set("plot","plot_file_name", counter_name )
+        try:
+            plotter(plotable_data,config)  
+        except RuntimeError as e:
+            logger.error("Plotting failed on '" + counter + "'; " + str(e))
     
 logger.info('Done.')

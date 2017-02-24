@@ -205,23 +205,46 @@ def plot(input_generator,config):
     input_generator is a generator of tuples with the following structure:
         (time_interval_start, count, eta)
     """
-    use_x_var = True
-    if "use_x_var" in config:
-        use_x_var = bool(config["use_x_var"])  
-    if "y_label" not in config:
-        config["y_label"] = "counts"
-    if "start_time" in config and "stop_time" in config:
-        start_tm = dt_parser(config["start_time"])
-        stop_tm = dt_parser(config["stop_time"])
-        data = [(dt_parser(tup[0]),float(tup[1]),float(tup[2])) for tup in input_generator if dt_parser(tup[0]) > start_tm and dt_parser(tup[0]) < stop_tm ]
-    else:
-        data = [(dt_parser(tup[0]),float(tup[1]),float(tup[2])) for tup in input_generator] 
     
-    if "rebin_factor" not in config or int(config["rebin_factor"]) == 1:
+    logger = logging.getLogger("plot") 
+    if logger.handlers == []:
+        fmtr = logging.Formatter('%(asctime)s %(name)s:%(lineno)s - %(levelname)s - %(message)s') 
+        hndlr = logging.StreamHandler()
+        hndlr.setFormatter(fmtr)
+        logger.addHandler(hndlr) 
+    
+    # if this throws a configparser.NoSectionError, 
+    # then let it rise uncaught, since nothing will work
+    plot_config = config['plot'] 
+  
+    # get parameters and set defaults
+    logscale_eta = plot_config.getboolean('logscale_eta',fallback=False)
+    use_x_var = plot_config.getboolean('use_x_var',fallback=True)
+    do_plot_parameters = plot_config.getboolean('do_plot_parameters',fallback=False)
+    start_tm = dt_parser( plot_config.get("start_time","1900-01-01") )
+    stop_tm = dt_parser( plot_config.get("stop_time","2050-01-01") )
+    rebin_factor = plot_config.getint("rebin_factor",fallback=1)
+
+    rebin_config = dict(config.items("rebin"))
+    plot_config["x_unit"] = "{0:d} {1:s}" .format( int(rebin_config["n_binning_unit"]) * rebin_factor, rebin_config["binning_unit"])
+
+    """
+    # only useful if we revive 'counter_name' parameter
+    if 'counter_name' in rebin_config:
+        if plot_config["plot_title"] == "":
+            plot_config["plot_title"] = rebin_config["counter_name"]
+        if plot_config["plot_file_name"] == "":
+            plot_config["plot_file_name"] = rebin_config["counter_name"]
+    """
+
+    # TODO: should just put this in a dataframe
+    data = [(dt_parser(tup[0]),float(tup[1]),float(tup[2])) for tup in input_generator if dt_parser(tup[0]) > start_tm and dt_parser(tup[0]) < stop_tm ]
+    
+    if rebin_factor <= 1:
         tbs = [tup[0] for tup in data]
         cts = [tup[1] for tup in data]
         eta = [tup[2] for tup in data]
-    # do a hacky rebin, just for plotting
+    # do a hacky rebin, just for plotting 
     else:
         tbs = []
         cts = []
@@ -235,17 +258,17 @@ def plot(input_generator,config):
             cts_tmp += cts_i
             eta_tmp += eta_i
             counter += 1
-            if counter == int(config["rebin_factor"]):
+            if counter == rebin_factor:
                 counter = 0
                 tbs.append(tbs_tmp)
                 cts.append(cts_tmp)
-                eta.append(eta_tmp/float(config["rebin_factor"]))
+                eta.append(eta_tmp/float(rebin_factor))
                 tbs_tmp = None
                 cts_tmp = 0
                 eta_tmp = 0
 
     if cts == []:
-        print("'cts' list is empty") 
+        sys.stderr.write("'cts' list is empty\n") 
         return -1
     max_cts = max(cts)
     min_cts = min(cts)
@@ -261,7 +284,7 @@ def plot(input_generator,config):
         ax1.set_xlim(0,len(cts))
    
     plotter="plot"
-    if config["logscale_eta"]:
+    if logscale_eta:
         plotter="semilogy"
     if use_x_var:
         getattr(ax2,plotter)(tbs,eta,'r')
@@ -287,7 +310,8 @@ def plot(input_generator,config):
         tl.set_fontsize(10)
    
     # y labels
-    ax1.set_ylabel(config["y_label"],color='k',fontsize=12)
+    y_label = plot_config.get('y_label','counts')
+    ax1.set_ylabel(y_label,color='k',fontsize=12)
     ax2.set_ylabel("eta",color='r',fontsize=12)
 
     ax1.yaxis.set_major_locator(plticker.MaxNLocator(4))
@@ -295,21 +319,47 @@ def plot(input_generator,config):
 
     # x date formatting
     if use_x_var:
-        formatter = mdates.DateFormatter('%Y-%m-%d')
-        ax2.xaxis.set_major_formatter( formatter ) 
+        day_locator = mdates.DayLocator()
+        hour_locator = mdates.HourLocator()
+        day_formatter = mdates.DateFormatter('%Y-%m-%d')
+        ax2.xaxis.set_major_formatter( day_formatter ) 
+        ax2.xaxis.set_major_locator( day_locator ) 
+        ax2.xaxis.set_minor_locator( hour_locator ) 
         fig.autofmt_xdate()
-    ax2.set_xlabel("time ({} bins)".format(config["x_unit"].rstrip('s')))
+    ax2.set_xlabel("time ({} bins)".format(plot_config["x_unit"].rstrip('s')))
 
     ax1.grid(True)
     ax2.grid(True)
+ 
+    # build text box for parameter display
+    if do_plot_parameters:
+        props = dict(boxstyle='round',facecolor='white', alpha=0.5)
+        model_name = config['analyze']['model_name']
+        model_pars = ""
+        for k,v in config[model_name + '_model'].items():
+            model_pars += "{}: {}\n".format(k,v) 
+        text_str = "model: {}\n{}".format(model_name,str(model_pars))
+        ax1.text(0.05,0.95,
+                text_str,
+                bbox=props,
+                verticalalignment='top',
+                fontsize=8,
+                transform=ax1.transAxes
+                )
     
-    plt.suptitle(u"{}".format(config["plot_title"]))
+    plt.suptitle(u"{}".format( plot_config.get("plot_title","SET A PLOT TITLE")))
     
+    # write the image 
     try:
-        os.makedirs(config["plot_dir"]) 
+        os.makedirs(plot_config.get("plot_dir",".")) 
     except OSError:
         pass
-    plot_file_name = u"{}/{}.{}".format(config["plot_dir"].rstrip('/'), config["plot_file_name"],config["plot_file_extension"])
+
+    plot_file_name = u"{}/{}.{}".format(
+            plot_config.get("plot_dir",".").rstrip('/'), 
+            plot_config.get("plot_file_name","plot"),
+            plot_config.get("plot_file_extension","png")
+            )
     plt.savefig(plot_file_name) 
     plt.close()
 
