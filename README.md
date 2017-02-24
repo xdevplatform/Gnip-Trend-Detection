@@ -23,18 +23,12 @@ be generated from the source by running:
 
 Installation of `pdflatex` and/or additional .sty files may be required.
 
-# Software
-
-The trend detection software is designed to work easily with 
-the [Gnip-Stream-Collector-Metrics](https://github.com/DrSkippy/Gnip-Stream-Collector-Metrics) package, 
-configured to read
-from a Gnip PowerTrack stream. However, any time series data can be easily
-transformed into form useable by the scripts in this package. 
+# Gnip-Trend-Detection Software
 
 ## Input Data
 
 The input data consists of CSV records, and is expected to contain data for one
-counter and one time interval on each line, in the following format:
+quantity ("counter") and one time interval on each line, in the following format:
 
 | interval start time | interval duration in sec. | count | counter name |
 | ------------------- | --------- | ---------- | ------------------- |
