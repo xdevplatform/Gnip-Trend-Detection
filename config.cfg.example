@@ -1,24 +1,34 @@
 [rebin]
-start_time=20140824000000
-stop_time=20140923160000
-counters_file_name=
+#start_time=20140824000000
+#stop_time=20140923160000
 binning_unit=hours
 n_binning_unit=1
+
+# to be used with trend_analyze_many.py
+counters_file_name=counters.txt
 
 [analyze]
 model_name=Poisson
 #model_name=WeightedDataTemplates
+#model_name=LinearRegressionModel
+#model_name=MannKendall
 
 [plot]
 plot_title=
 plot_file_name=scotus
 plot_file_extension=png
 plot_dir=.
+## plot eta values on log scale
 #logscale_eta=true
-use_x_var=false
-# custom time range for plotting only
+## set to false to ignore time qualities of x variable
+#use_x_var=false
+## custom time range for plotting
 #start_time=
 #stop_time=
+## add text box with analysis parameters
+do_plot_parameters=true
+## re-bin for plotting purposes
+#rebin_factor=10
 
 
 ### model configurations
@@ -36,6 +46,16 @@ mode=lc
 period_list=hour
 # Poisson confidence interval parameter
 alpha=0.99
+
+[LinearRegressionModel_model]
+## don't run regression until this many points have been observed
+min_points=100
+## run regression only in this windown
+#regression_window_size=100
+## smooth counts by averaging over this window
+#averaging_window_size=10
+## allows comparison between different plots
+#norm_by_mean=true
 
 [WeightedDataTemplates_model]
 ## NOTE: these parameters must match those used to generate the library
@@ -57,3 +77,4 @@ num_iterations = 5
 num_test_sets = 100
 num_ref_sets = 500
 
+[MannKendall_model]
